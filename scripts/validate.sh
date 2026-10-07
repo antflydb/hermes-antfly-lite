@@ -25,6 +25,7 @@ test -x scripts/package-smoke.sh
 test -x scripts/doctor-smoke.sh
 test -x scripts/support-eval.sh
 test -x scripts/ci-release.sh
+test -x scripts/fetch-antfly-native.sh
 test -x scripts/linux-package-smoke.sh
 
 if rg -n 'antflydb_[A-Za-z0-9_-]+' . --glob '!bin/**'; then
