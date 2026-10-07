@@ -1,0 +1,15 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "antfly-knowledge": {
+      "type": "stdio",
+      "command": "./bin/antfly-hermes-mcp",
+      "args": ["--db", "${PLUGIN_DATA}/knowledge.aflite"],
+      "env": {
+        "DYLD_LIBRARY_PATH": "${PLUGIN_ROOT}/bin",
+        "LD_LIBRARY_PATH": "${PLUGIN_ROOT}/bin"
+      },
+      "cwd": "${PLUGIN_DATA}"
+    }
+  }
+}

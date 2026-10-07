@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_dir=$(cd "$(dirname "$0")/.." && pwd)
+version=$(jq -er '.version' "$project_dir/plugin.json")
+target=${1:-"$(go env GOOS)-$(go env GOARCH)"}
+host_target="$(go env GOOS)-$(go env GOARCH)"
+
+sha256() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$@"
+  else
+    sha256sum "$@"
+  fi
+}
+
+if [[ "$target" != "$host_target" ]]; then
+  echo "error: package target $target does not match locally built target $host_target" >&2
+  exit 1
+fi
+
+case "$target" in
+  darwin-arm64)
+    native_library=libantfly.dylib
+    expected_arch='arm64'
+    ;;
+  linux-amd64)
+    native_library=libantfly.so
+    expected_arch='x86-64|x86_64'
+    ;;
+  linux-arm64)
+    native_library=libantfly.so
+    expected_arch='aarch64|ARM aarch64'
+    ;;
+  *)
+    echo "error: unsupported release target: $target" >&2
+    exit 1
+    ;;
+esac
+
+required_files=(
+  bin/antfly-hermes-mcp
+  bin/antfly-hermes-setup
+  bin/antfly-hermes-ingest
+  bin/antfly-hermes-maintain
+  bin/antfly-hermes-eval
+  "bin/$native_library"
+  plugin.json
+  mcp.json
+  README.md
+  LICENSE
+  SOURCE_PROVENANCE.md
+  SECURITY.md
+  skills/antfly-support/SKILL.md
+  examples/support-governed.jsonl
+  evals/support-retrieval.jsonl
+  docs/knowledge-contract.md
+  docs/security.md
+  docs/operations.md
+  docs/quickstart.md
+  docs/troubleshooting.md
+)
+for relative_path in "${required_files[@]}"; do
+  if [[ ! -f "$project_dir/$relative_path" ]]; then
+    echo "error: required release file is missing: $relative_path" >&2
+    exit 1
+  fi
+done
+
+for executable in antfly-hermes-mcp antfly-hermes-setup antfly-hermes-ingest antfly-hermes-maintain antfly-hermes-eval; do
+  description=$(file "$project_dir/bin/$executable")
+  if [[ ! "$description" =~ $expected_arch ]]; then
+    echo "error: bin/$executable does not match $target: $description" >&2
+    exit 1
+  fi
+done
+native_description=$(file "$project_dir/bin/$native_library")
+if [[ ! "$native_description" =~ $expected_arch ]]; then
+  echo "error: bin/$native_library does not match $target: $native_description" >&2
+  exit 1
+fi
+
+package_name="antfly-hermes-lite-$version-$target"
+artifact="$project_dir/dist/$package_name.tar.gz"
+checksum_file="$artifact.sha256"
+if [[ -e "$artifact" || -e "$checksum_file" ]]; then
+  echo "error: release artifact already exists: $artifact" >&2
+  echo "remove or archive the existing generated artifact before packaging again" >&2
+  exit 1
+fi
+
+package_tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/antfly-hermes-package.XXXXXX")
+trap 'rm -rf "$package_tmp_dir"' EXIT
+package_root="$package_tmp_dir/$package_name"
+mkdir -p "$package_root/bin" "$package_root/skills/antfly-support" "$package_root/examples" \
+  "$package_root/evals" "$package_root/docs" "$project_dir/dist"
+
+cp "$project_dir/plugin.json" "$project_dir/mcp.json" "$project_dir/README.md" \
+  "$project_dir/LICENSE" "$project_dir/SOURCE_PROVENANCE.md" "$project_dir/SECURITY.md" "$package_root/"
+cp "$project_dir/skills/antfly-support/SKILL.md" "$package_root/skills/antfly-support/"
+cp "$project_dir/examples/support-governed.jsonl" "$package_root/examples/"
+cp "$project_dir/evals/support-retrieval.jsonl" "$package_root/evals/"
+cp "$project_dir/docs/knowledge-contract.md" "$project_dir/docs/security.md" \
+  "$project_dir/docs/operations.md" "$project_dir/docs/quickstart.md" \
+  "$project_dir/docs/troubleshooting.md" "$package_root/docs/"
+cp "$project_dir/bin/antfly-hermes-mcp" "$project_dir/bin/antfly-hermes-ingest" \
+  "$project_dir/bin/antfly-hermes-setup" "$project_dir/bin/antfly-hermes-maintain" \
+  "$project_dir/bin/antfly-hermes-eval" "$project_dir/bin/$native_library" "$package_root/bin/"
+chmod 0755 "$package_root/bin/antfly-hermes-mcp" "$package_root/bin/antfly-hermes-ingest" \
+  "$package_root/bin/antfly-hermes-setup" "$package_root/bin/antfly-hermes-maintain" \
+  "$package_root/bin/antfly-hermes-eval"
+
+connector_commit=$(git -C "$project_dir" rev-parse --verify HEAD 2>/dev/null || printf 'uncommitted')
+antfly_lite_version=$(cd "$project_dir" && go list -m -f '{{.Version}}' github.com/antflydb/antfly/go/pkg/antflylite)
+native_sha=$(sha256 "$package_root/bin/$native_library" | awk '{print $1}')
+jq -n \
+  --arg version "$version" \
+  --arg target "$target" \
+  --arg connector_commit "$connector_commit" \
+  --arg antfly_lite_module "$antfly_lite_version" \
+  --arg native_library "$native_library" \
+  --arg native_sha256 "$native_sha" \
+  '{version:$version,target:$target,connector_commit:$connector_commit,antfly_lite_module:$antfly_lite_module,native_library:$native_library,native_sha256:$native_sha256}' \
+  > "$package_root/build-metadata.json"
+
+(
+  cd "$package_root"
+  sha256 \
+    LICENSE README.md SECURITY.md SOURCE_PROVENANCE.md build-metadata.json mcp.json plugin.json \
+    bin/antfly-hermes-eval bin/antfly-hermes-ingest bin/antfly-hermes-maintain bin/antfly-hermes-mcp \
+    bin/antfly-hermes-setup "bin/$native_library" evals/support-retrieval.jsonl examples/support-governed.jsonl \
+    docs/knowledge-contract.md docs/operations.md docs/quickstart.md docs/security.md docs/troubleshooting.md \
+    skills/antfly-support/SKILL.md > SHA256SUMS
+)
+
+COPYFILE_DISABLE=1 tar -czf "$artifact" -C "$package_tmp_dir" "$package_name"
+(
+  cd "$project_dir/dist"
+  sha256 "$(basename "$artifact")" > "$(basename "$checksum_file")"
+)
+
+echo "$artifact"

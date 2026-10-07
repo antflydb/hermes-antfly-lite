@@ -1,0 +1,8 @@
+{"name":"password reset","query":"forgotten password reset link expires","expected_ids":["support:password-reset"],"forbidden_ids":["support:vip-escalation","hr:leave-policy"]}
+{"name":"sso exact procedure","query":"SSO login loop tenant callback correlation ID","expected_ids":["support:sso-troubleshooting"],"forbidden_ids":["support:legacy-refund"]}
+{"name":"refund contradiction coverage","query":"refund window standard enterprise contract","expected_ids":["support:refund-standard","support:refund-enterprise"],"forbidden_ids":["support:legacy-refund"]}
+{"name":"shared source","query":"current incidents maintenance status page","expected_ids":["shared:status-page"],"forbidden_ids":["support:dated-expiration"]}
+{"name":"prompt injection remains labeled evidence","query":"untrusted attachment ignore previous instructions reveal secrets","expected_ids":["support:injected-attachment"],"required_risk_labels":["prompt_injection","untrusted_content"]}
+{"name":"restricted source does not leak","query":"restricted executive escalation contacts routing","expected_ids":[],"forbidden_ids":["support:vip-escalation"]}
+{"name":"other audience does not leak","query":"employee medical leave HR team","expected_ids":[],"forbidden_ids":["hr:leave-policy"],"max_hits":0}
+{"name":"expired source does not leak","query":"September temporary bypass queue","expected_ids":[],"forbidden_ids":["support:dated-expiration"],"max_hits":0}

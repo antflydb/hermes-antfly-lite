@@ -1,0 +1,6 @@
+/bin/
+/dist/
+/*.aflite
+/*.afb
+/.phase0/
+
