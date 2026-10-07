@@ -36,6 +36,14 @@ fi
 jq -e '(.ready | not) and (.backup.fresh | not)' "$report" >/dev/null
 
 "$project_dir/bin/antfly-hermes-setup" --db "$restored" --restore "$backup" >/dev/null
-test "$(stat -f '%Sp' "$restored" 2>/dev/null || stat -c '%A' "$restored")" = "-rw-------"
+case "$(uname -s)" in
+  Darwin) restored_mode=$(stat -f '%Sp' "$restored") ;;
+  Linux) restored_mode=$(stat -c '%A' "$restored") ;;
+  *)
+    echo "error: unsupported operating system for permission check: $(uname -s)" >&2
+    exit 1
+    ;;
+esac
+test "$restored_mode" = "-rw-------"
 
 echo "setup and doctor smoke passed"
