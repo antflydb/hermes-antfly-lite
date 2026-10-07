@@ -11,7 +11,11 @@ fi
 
 (
   cd "$antfly_dir/zig"
-  zig build capi -Doptimize=ReleaseFast
+  zig_args=(build capi -Doptimize=ReleaseFast)
+  if [[ -n "${ANTFLY_ZIG_MAXRSS:-}" ]]; then
+    zig_args+=(--maxrss "$ANTFLY_ZIG_MAXRSS")
+  fi
+  zig "${zig_args[@]}"
 )
 
 ANTFLY_SOURCE_DIR="$antfly_dir" "$project_dir/scripts/build-local.sh"

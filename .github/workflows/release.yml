@@ -39,6 +39,9 @@ jobs:
       - name: Build and qualify package
         env:
           ANTFLY_SOURCE_DIR: ${{ github.workspace }}/.antfly-source
+          # Antfly's Zig build declares a conservative 20 GiB upper bound.
+          # Hosted runners compile it within their actual memory allocation.
+          ANTFLY_ZIG_MAXRSS: "21474836480"
         run: scripts/ci-release.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
