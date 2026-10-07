@@ -27,7 +27,7 @@ if "$project_dir/bin/phase0-lockprobe" --db "$db" --mode writer >"$smoke_dir/sec
   echo "error: second writer unexpectedly opened the database" >&2
   exit 1
 fi
-rg -q 'busy' "$smoke_dir/second-writer.out"
+grep -q 'busy' "$smoke_dir/second-writer.out"
 
 "$project_dir/bin/phase0-lockprobe" --db "$db" --mode readonly --hold 1s >"$smoke_dir/reader.out" &
 reader_pid=$!
@@ -39,8 +39,7 @@ reader_pid=""
 wait "$writer_pid"
 writer_pid=""
 
-rg -q 'opened=writer' "$smoke_dir/writer.out"
-rg -q 'opened=readonly' "$smoke_dir/reader.out"
-rg -q 'opened=readonly' "$smoke_dir/second-reader.out"
+grep -q 'opened=writer' "$smoke_dir/writer.out"
+grep -q 'opened=readonly' "$smoke_dir/reader.out"
+grep -q 'opened=readonly' "$smoke_dir/second-reader.out"
 echo "phase 0 concurrency smoke passed"
-

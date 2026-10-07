@@ -19,8 +19,8 @@ restricted_db="$eval_dir/support-restricted.aflite"
   --audience support \
   --max-visibility internal > "$setup_output"
 
-rg -q 'approved=6' "$setup_output"
-rg -q 'skipped=6' "$setup_output"
+grep -q 'approved=6' "$setup_output"
+grep -q 'skipped=6' "$setup_output"
 "$project_dir/bin/antfly-hermes-maintain" doctor \
   --db "$db" --backup "$backup" --query "password reset" \
   | jq -e '.ready' >/dev/null
@@ -34,8 +34,8 @@ jq -e '.passed and .cases == 8 and .cases_passed == 8 and .expected_recall == 1 
   --input "$project_dir/examples/support-governed.jsonl" \
   --audience support \
   --max-visibility public > "$eval_dir/public-setup.txt"
-rg -q 'approved=3' "$eval_dir/public-setup.txt"
-rg -q 'skipped=9' "$eval_dir/public-setup.txt"
+grep -q 'approved=3' "$eval_dir/public-setup.txt"
+grep -q 'skipped=9' "$eval_dir/public-setup.txt"
 printf '%s\n' \
   '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_knowledge","arguments":{"query":"SSO login loop tenant callback","limit":6}}}' \
   | "$project_dir/bin/antfly-hermes-mcp" --db "$public_db" \
@@ -46,7 +46,7 @@ printf '%s\n' \
   --input "$project_dir/examples/support-governed.jsonl" \
   --audience support \
   --max-visibility restricted > "$eval_dir/restricted-setup.txt"
-rg -q 'approved=7' "$eval_dir/restricted-setup.txt"
+grep -q 'approved=7' "$eval_dir/restricted-setup.txt"
 printf '%s\n' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_knowledge","arguments":{"query":"restricted executive escalation contacts routing","limit":6}}}' \
   | "$project_dir/bin/antfly-hermes-mcp" --db "$restricted_db" \

@@ -13,7 +13,7 @@ if "$project_dir/bin/antfly-hermes-mcp" --db "$missing" </dev/null >"$smoke_dir/
   echo "error: missing database unexpectedly opened" >&2
   exit 1
 fi
-rg -qi 'not found' "$smoke_dir/missing.err"
+grep -qi 'not found' "$smoke_dir/missing.err"
 test ! -e "$missing"
 
 corrupt="$smoke_dir/corrupt.aflite"
@@ -22,7 +22,7 @@ if "$project_dir/bin/antfly-hermes-mcp" --db "$corrupt" </dev/null >"$smoke_dir/
   echo "error: corrupt database unexpectedly opened" >&2
   exit 1
 fi
-rg -qi 'invalid|truncated|internal' "$smoke_dir/corrupt.err"
+grep -Eqi 'invalid|truncated|internal' "$smoke_dir/corrupt.err"
 
 valid_db="$smoke_dir/valid.aflite"
 valid_backup="$smoke_dir/valid.afb"
@@ -42,7 +42,7 @@ if "$project_dir/bin/antfly-hermes-setup" \
   echo "error: incompatible backup unexpectedly restored" >&2
   exit 1
 fi
-rg -qi 'format/version compatibility' "$smoke_dir/incompatible.err"
+grep -qi 'format/version compatibility' "$smoke_dir/incompatible.err"
 test ! -e "$incompatible_target"
 
 echo "phase 0 failure smoke passed"

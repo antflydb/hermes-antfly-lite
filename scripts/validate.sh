@@ -28,7 +28,8 @@ test -x scripts/ci-release.sh
 test -x scripts/fetch-antfly-native.sh
 test -x scripts/linux-package-smoke.sh
 
-if rg -n 'antflydb_[A-Za-z0-9_-]+' . --glob '!bin/**'; then
+if grep -RInE 'antflydb_[A-Za-z0-9_-]+' . \
+  --exclude-dir=.git --exclude-dir=.antfly-native --exclude-dir=bin --exclude-dir=dist; then
   echo "error: possible Antfly API key literal" >&2
   exit 1
 fi

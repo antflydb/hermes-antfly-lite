@@ -70,7 +70,7 @@ printf '%s\n' \
   '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_knowledge","arguments":{"query":"managed authentication customer sign-in","limit":3}}}' \
   | "$package_root/bin/antfly-hermes-mcp" --db "$data_dir/knowledge.aflite" > "$responses"
 
-if ! rg -q 'support:authentication' "$responses"; then
+if ! grep -q 'support:authentication' "$responses"; then
   echo "error: packaged MCP search did not return the expected source" >&2
   exit 1
 fi
