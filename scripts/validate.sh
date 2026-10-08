@@ -13,8 +13,8 @@ if grep -Eq '^replace[[:space:]]' go.mod; then
   echo "error: release module must not contain a replace directive" >&2
   exit 1
 fi
-go test ./internal/mcp ./internal/policy ./internal/evidence
-go vet ./internal/mcp ./internal/policy ./internal/evidence
+go test ./internal/mcp ./internal/policy ./internal/evidence ./internal/githubdocs ./cmd/antfly-hermes-github
+go vet ./internal/mcp ./internal/policy ./internal/evidence ./internal/githubdocs
 bash -n scripts/*.sh
 test -x scripts/build-local.sh
 test -x scripts/smoke.sh
@@ -27,6 +27,7 @@ test -x scripts/support-eval.sh
 test -x scripts/support-agent-pilot.sh
 test -x scripts/configure-support-profile.sh
 test -x scripts/launch-support-dashboard.sh
+test -x scripts/import-github-docs.sh
 test -x scripts/ci-release.sh
 test -x scripts/fetch-antfly-native.sh
 test -x scripts/linux-package-smoke.sh

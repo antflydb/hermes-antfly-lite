@@ -44,6 +44,7 @@ required_files=(
   bin/antfly-hermes-ingest
   bin/antfly-hermes-maintain
   bin/antfly-hermes-eval
+  bin/antfly-hermes-github
   "bin/$native_library"
   plugin.json
   mcp.json
@@ -55,15 +56,19 @@ required_files=(
   examples/support-governed.jsonl
   evals/support-retrieval.jsonl
   evals/support-agent-conversations.jsonl
+  evals/antfly-github-docs.jsonl
+  evals/antfly-github-conversations.jsonl
   docs/knowledge-contract.md
   docs/security.md
   docs/operations.md
   docs/quickstart.md
   docs/troubleshooting.md
   docs/support-agent-pilot.md
+  docs/github-ingestion.md
   scripts/support-agent-pilot.sh
   scripts/configure-support-profile.sh
   scripts/launch-support-dashboard.sh
+  scripts/import-github-docs.sh
 )
 for relative_path in "${required_files[@]}"; do
   if [[ ! -f "$project_dir/$relative_path" ]]; then
@@ -72,7 +77,7 @@ for relative_path in "${required_files[@]}"; do
   fi
 done
 
-for executable in antfly-hermes-mcp antfly-hermes-setup antfly-hermes-ingest antfly-hermes-maintain antfly-hermes-eval; do
+for executable in antfly-hermes-mcp antfly-hermes-setup antfly-hermes-ingest antfly-hermes-maintain antfly-hermes-eval antfly-hermes-github; do
   description=$(file "$project_dir/bin/$executable")
   if [[ ! "$description" =~ $expected_arch ]]; then
     echo "error: bin/$executable does not match $target: $description" >&2
@@ -105,19 +110,24 @@ cp "$project_dir/plugin.json" "$project_dir/mcp.json" "$project_dir/README.md" \
 cp "$project_dir/skills/antfly-support/SKILL.md" "$package_root/skills/antfly-support/"
 cp "$project_dir/examples/support-governed.jsonl" "$package_root/examples/"
 cp "$project_dir/evals/support-retrieval.jsonl" "$project_dir/evals/support-agent-conversations.jsonl" \
+  "$project_dir/evals/antfly-github-docs.jsonl" "$project_dir/evals/antfly-github-conversations.jsonl" \
   "$package_root/evals/"
 cp "$project_dir/docs/knowledge-contract.md" "$project_dir/docs/security.md" \
   "$project_dir/docs/operations.md" "$project_dir/docs/quickstart.md" \
-  "$project_dir/docs/troubleshooting.md" "$project_dir/docs/support-agent-pilot.md" "$package_root/docs/"
+  "$project_dir/docs/troubleshooting.md" "$project_dir/docs/support-agent-pilot.md" \
+  "$project_dir/docs/github-ingestion.md" "$package_root/docs/"
 cp "$project_dir/scripts/support-agent-pilot.sh" "$project_dir/scripts/configure-support-profile.sh" \
-  "$project_dir/scripts/launch-support-dashboard.sh" "$package_root/scripts/"
+  "$project_dir/scripts/launch-support-dashboard.sh" "$project_dir/scripts/import-github-docs.sh" \
+  "$package_root/scripts/"
 cp "$project_dir/bin/antfly-hermes-mcp" "$project_dir/bin/antfly-hermes-ingest" \
   "$project_dir/bin/antfly-hermes-setup" "$project_dir/bin/antfly-hermes-maintain" \
-  "$project_dir/bin/antfly-hermes-eval" "$project_dir/bin/$native_library" "$package_root/bin/"
+  "$project_dir/bin/antfly-hermes-eval" "$project_dir/bin/antfly-hermes-github" \
+  "$project_dir/bin/$native_library" "$package_root/bin/"
 chmod 0755 "$package_root/bin/antfly-hermes-mcp" "$package_root/bin/antfly-hermes-ingest" \
   "$package_root/bin/antfly-hermes-setup" "$package_root/bin/antfly-hermes-maintain" \
   "$package_root/bin/antfly-hermes-eval" "$package_root/scripts/support-agent-pilot.sh" \
-  "$package_root/scripts/configure-support-profile.sh" "$package_root/scripts/launch-support-dashboard.sh"
+  "$package_root/bin/antfly-hermes-github" "$package_root/scripts/configure-support-profile.sh" \
+  "$package_root/scripts/launch-support-dashboard.sh" "$package_root/scripts/import-github-docs.sh"
 
 connector_commit=$(git -C "$project_dir" rev-parse --verify HEAD 2>/dev/null || printf 'uncommitted')
 antfly_lite_version=$(cd "$project_dir" && go list -m -f '{{.Version}}' github.com/antflydb/antfly/go/pkg/antflylite)
@@ -136,12 +146,13 @@ jq -n \
   cd "$package_root"
   sha256 \
     LICENSE README.md SECURITY.md SOURCE_PROVENANCE.md build-metadata.json mcp.json plugin.json \
-    bin/antfly-hermes-eval bin/antfly-hermes-ingest bin/antfly-hermes-maintain bin/antfly-hermes-mcp \
-    bin/antfly-hermes-setup "bin/$native_library" evals/support-agent-conversations.jsonl \
-    evals/support-retrieval.jsonl examples/support-governed.jsonl docs/knowledge-contract.md \
+    bin/antfly-hermes-eval bin/antfly-hermes-github bin/antfly-hermes-ingest bin/antfly-hermes-maintain bin/antfly-hermes-mcp \
+    bin/antfly-hermes-setup "bin/$native_library" evals/antfly-github-conversations.jsonl \
+    evals/antfly-github-docs.jsonl evals/support-agent-conversations.jsonl \
+    evals/support-retrieval.jsonl examples/support-governed.jsonl docs/github-ingestion.md docs/knowledge-contract.md \
     docs/operations.md docs/quickstart.md docs/security.md docs/support-agent-pilot.md \
-    docs/troubleshooting.md scripts/configure-support-profile.sh scripts/launch-support-dashboard.sh \
-    scripts/support-agent-pilot.sh skills/antfly-support/SKILL.md > SHA256SUMS
+    docs/troubleshooting.md scripts/configure-support-profile.sh scripts/import-github-docs.sh \
+    scripts/launch-support-dashboard.sh scripts/support-agent-pilot.sh skills/antfly-support/SKILL.md > SHA256SUMS
 )
 
 COPYFILE_DISABLE=1 tar -czf "$artifact" -C "$package_tmp_dir" "$package_name"

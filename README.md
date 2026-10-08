@@ -23,6 +23,9 @@ conversations, follow the [Support-agent pilot](docs/support-agent-pilot.md).
 Once installed and authenticated, launch its local web UI with
 `scripts/launch-support-dashboard.sh`.
 
+To build a governed Antfly Lite knowledge base from commit-pinned GitHub files,
+see [GitHub documentation ingestion](docs/github-ingestion.md).
+
 ## Model-visible tools
 
 - `search_knowledge`: full-text search over approved knowledge chunks.

@@ -11,6 +11,8 @@ plugin_data=${ANTFLY_PLUGIN_DATA:-"$profile_root/plugin-data/agent-plugin-antfly
 db=${ANTFLY_DB:-"$plugin_data/knowledge.aflite"}
 backup=${ANTFLY_BACKUP:-"$plugin_data/knowledge.afb"}
 suite=${SUPPORT_AGENT_SUITE:-"$project_dir/evals/support-agent-conversations.jsonl"}
+retrieval_suite=${SUPPORT_RETRIEVAL_SUITE:-"$project_dir/evals/support-retrieval.jsonl"}
+doctor_query=${SUPPORT_DOCTOR_QUERY:-"password reset"}
 model=${HERMES_MODEL:-gpt-5.6-sol}
 provider=${HERMES_PROVIDER:-openai-codex}
 skill_namespace=$(basename "$plugin_data")
@@ -30,6 +32,7 @@ Environment overrides: HERMES_BIN, HERMES_PROFILE, HERMES_ROOT,
 HERMES_PROFILE_ROOT, ANTFLY_PLUGIN_ROOT, ANTFLY_PLUGIN_DATA, ANTFLY_DB,
 ANTFLY_BACKUP, HERMES_MODEL, HERMES_PROVIDER, SUPPORT_AGENT_SUITE,
 SUPPORT_AGENT_OUTPUT, HERMES_SUPPORT_SKILL.
+Retrieval overrides: SUPPORT_RETRIEVAL_SUITE, SUPPORT_DOCTOR_QUERY.
 EOF
 }
 
@@ -75,11 +78,11 @@ verify() {
   "$plugin_root/bin/antfly-hermes-maintain" doctor \
     --db "$db" \
     --backup "$backup" \
-    --query "password reset" \
+    --query "$doctor_query" \
     | jq -e '.ready' >/dev/null
   "$plugin_root/bin/antfly-hermes-eval" \
     --db "$db" \
-    --suite "$project_dir/evals/support-retrieval.jsonl" \
+    --suite "$retrieval_suite" \
     | jq -e '.passed and .cases == 8 and .cases_passed == 8 and .expected_recall == 1 and .forbidden_leakage == 0 and .citation_validity == 1' >/dev/null
   echo "support knowledge verification passed"
 }

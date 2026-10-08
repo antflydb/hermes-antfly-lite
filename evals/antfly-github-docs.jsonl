@@ -1,0 +1,8 @@
+{"name":"Antfly Lite storage","query":"Antfly Lite embedded local database file backup","expected_ids":["github:antflydb/antfly:d5bb2d43c028707b:0001"]}
+{"name":"authentication","query":"Antfly API authentication authorization bearer key","expected_ids":["github:antflydb/antfly:a4f5eb8303a2518a:0001"]}
+{"name":"SDKs","query":"official Antfly SDK languages clients","expected_ids":["github:antflydb/antfly:0431b0ee3c6a2c82:0001"]}
+{"name":"supported models","query":"supported embedding reranking generation models","expected_ids":["github:antflydb/antfly:3aa4158c4fd117ea:0001"]}
+{"name":"support answer agent","query":"build support answer agent evidence citations","expected_ids":["github:antflydb/antfly:d38aa5a3a8360c7d:0001"]}
+{"name":"hybrid search","query":"hybrid search BM25 semantic reranking","expected_ids":["github:antflydb/antfly:27b4ba90efafcf80:0001"]}
+{"name":"quickstart","query":"quickstart install create table index documents query","expected_ids":["github:antflydb/antfly:cab63a9635774344:0001"]}
+{"name":"architecture","query":"Antfly architecture storage retrieval components","expected_ids":["github:antflydb/antfly:e4a2cbbf55311e53:0001"]}

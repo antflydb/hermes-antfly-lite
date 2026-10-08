@@ -36,7 +36,11 @@ fi
 test -x "$package_root/scripts/support-agent-pilot.sh"
 test -x "$package_root/scripts/configure-support-profile.sh"
 test -x "$package_root/scripts/launch-support-dashboard.sh"
+test -x "$package_root/scripts/import-github-docs.sh"
+test -x "$package_root/bin/antfly-hermes-github"
 jq -ce . "$package_root/evals/support-agent-conversations.jsonl" >/dev/null
+jq -ce . "$package_root/evals/antfly-github-conversations.jsonl" >/dev/null
+jq -ce . "$package_root/evals/antfly-github-docs.jsonl" >/dev/null
 
 version_output=$("$package_root/bin/antfly-hermes-mcp" --version)
 if [[ "$version_output" != *"version=$version"* || "$version_output" != *"target=$target"* ]]; then

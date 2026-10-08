@@ -1,0 +1,5 @@
+{"id":"github-lite","prompt":"What is Antfly Lite, what files does it use, and when should I use it?","required_terms":["Antfly Lite",".aflite",".afb","docs/guides/lite.mdx"],"required_any_terms":["embedded","local"]}
+{"id":"github-auth","prompt":"How does authentication work for the Antfly API?","required_terms":["authorization","docs/reference/auth.md"],"required_any_terms":["Bearer","API key"]}
+{"id":"github-sdks","prompt":"Which Antfly SDK options are documented?","required_terms":["SDK","docs/reference/sdks.mdx"]}
+{"id":"github-hybrid","prompt":"Explain how Antfly hybrid search combines lexical and semantic retrieval.","required_terms":["hybrid","docs/guides/hybrid-search.mdx"],"required_any_terms":["BM25","full-text","semantic"]}
+{"id":"github-support-agent","prompt":"How do the Antfly docs recommend building a grounded support-answer agent?","required_terms":["support","docs/guides/support-answer-agent.mdx"],"required_any_terms":["citation","evidence","source"]}
