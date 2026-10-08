@@ -180,7 +180,7 @@ func tools() []map[string]any {
 		},
 		{
 			"name":        "knowledge_status",
-			"description": "Report storage identity and retrieval capabilities for the local knowledge base.",
+			"description": "Report storage identity, retrieval capabilities, and active corpus provenance for the local knowledge base.",
 			"inputSchema": map[string]any{
 				"type":                 "object",
 				"additionalProperties": false,

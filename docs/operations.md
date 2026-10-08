@@ -1,9 +1,11 @@
 # Operations
 
-The live artifact is `knowledge.aflite`; the portable backup is
-`knowledge.afb`. They are different formats and neither should be edited in
-place. One setup/maintenance writer and multiple proven read-only sidecars are
-supported. A second writer must receive a busy error.
+The live corpus consists of `knowledge.aflite`, its portable backup
+`knowledge.afb`, and the validated `knowledge.manifest.json` sidecar. The
+manifest records corpus identity, provenance, health query, and qualification
+suites. These artifacts should not be edited in place. One setup/maintenance
+writer and multiple proven read-only sidecars are supported. A second writer
+must receive a busy error.
 
 Before enabling a profile:
 
@@ -14,10 +16,11 @@ Before enabling a profile:
 5. Validate and enable the plugin in Hermes.
 
 Upgrades replace plugin binaries but preserve `${PLUGIN_DATA}`. Disable and
-uninstall operations must not delete `.aflite` or `.afb`. Restore always targets
-a new filename, which prevents partial replacement of the live artifact. After
-validation, switch the configured artifact or replace it only while writers and
-readers are stopped.
+uninstall operations must not delete `.aflite`, `.afb`, or the manifest. Restore
+always targets a new filename, which prevents partial replacement of the live
+artifact. After validation, promote the database, backup, and matching manifest
+as one stopped-reader operation. Never infer or synthesize a manifest for an
+existing database whose corpus identity is unknown.
 
 Supported package targets under qualification are macOS arm64, Linux amd64, and
 Linux arm64. Every package contains its native library, build metadata, source

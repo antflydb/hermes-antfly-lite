@@ -2,21 +2,49 @@
 set -euo pipefail
 
 project_dir=$(cd "$(dirname "$0")/.." && pwd)
+# shellcheck source=scripts/lib/hermes-plugin.sh
+source "$project_dir/scripts/lib/hermes-plugin.sh"
+
 hermes_bin=${HERMES_BIN:-hermes}
 hermes_profile=${HERMES_PROFILE:-supportpilot}
 hermes_root=${HERMES_ROOT:-"$HOME/.hermes"}
 profile_root=${HERMES_PROFILE_ROOT:-"$hermes_root/profiles/$hermes_profile"}
 plugin_root=${ANTFLY_PLUGIN_ROOT:-"$profile_root/plugins/antfly-hermes-lite"}
-plugin_data=${ANTFLY_PLUGIN_DATA:-"$profile_root/plugin-data/agent-plugin-antfly-hermes-lite-b5bf37d8"}
+plugin_data=$(antfly_resolve_plugin_data "$profile_root")
 db=${ANTFLY_DB:-"$plugin_data/knowledge.aflite"}
 backup=${ANTFLY_BACKUP:-"$plugin_data/knowledge.afb"}
-suite=${SUPPORT_AGENT_SUITE:-"$project_dir/evals/support-agent-conversations.jsonl"}
-retrieval_suite=${SUPPORT_RETRIEVAL_SUITE:-"$project_dir/evals/support-retrieval.jsonl"}
-doctor_query=${SUPPORT_DOCTOR_QUERY:-"password reset"}
+manifest=${ANTFLY_CORPUS_MANIFEST:-"${db%.aflite}.manifest.json"}
+suite=${SUPPORT_AGENT_SUITE:-}
+retrieval_suite=${SUPPORT_RETRIEVAL_SUITE:-}
+doctor_query=${SUPPORT_DOCTOR_QUERY:-}
 model=${HERMES_MODEL:-gpt-5.6-sol}
 provider=${HERMES_PROVIDER:-openai-codex}
 skill_namespace=$(basename "$plugin_data")
 support_skill=${HERMES_SUPPORT_SKILL:-"$skill_namespace:antfly-support"}
+command=${1:-}
+
+if [[ -f "$manifest" ]]; then
+  if [[ -z "$doctor_query" ]]; then
+    doctor_query=$(jq -er '.health_query' "$manifest")
+  fi
+  if [[ -z "$retrieval_suite" ]]; then
+    retrieval_suite=$(antfly_resolve_plugin_file "$plugin_root" "$(jq -er '.evaluation.retrieval_suite' "$manifest")")
+  fi
+  if [[ -z "$suite" ]]; then
+    conversation_ref=$(jq -r '.evaluation.conversation_suite // empty' "$manifest")
+    if [[ -n "$conversation_ref" ]]; then
+      suite=$(antfly_resolve_plugin_file "$plugin_root" "$conversation_ref")
+    fi
+  fi
+elif [[ "$command" == "prepare" || -z "$command" ]]; then
+  doctor_query=${doctor_query:-"password reset"}
+  retrieval_suite=${retrieval_suite:-"$project_dir/evals/support-retrieval.jsonl"}
+  suite=${suite:-"$project_dir/evals/support-agent-conversations.jsonl"}
+else
+  echo "error: active corpus manifest not found: $manifest" >&2
+  echo "run the prepare command or promote a qualified manifest with the database" >&2
+  exit 1
+fi
 
 usage() {
   cat <<'EOF'
@@ -30,7 +58,7 @@ Commands:
 
 Environment overrides: HERMES_BIN, HERMES_PROFILE, HERMES_ROOT,
 HERMES_PROFILE_ROOT, ANTFLY_PLUGIN_ROOT, ANTFLY_PLUGIN_DATA, ANTFLY_DB,
-ANTFLY_BACKUP, HERMES_MODEL, HERMES_PROVIDER, SUPPORT_AGENT_SUITE,
+ANTFLY_BACKUP, ANTFLY_CORPUS_MANIFEST, HERMES_MODEL, HERMES_PROVIDER, SUPPORT_AGENT_SUITE,
 SUPPORT_AGENT_OUTPUT, HERMES_SUPPORT_SKILL.
 Retrieval overrides: SUPPORT_RETRIEVAL_SUITE, SUPPORT_DOCTOR_QUERY.
 EOF
@@ -55,6 +83,11 @@ prepare() {
   mkdir -p "$plugin_data"
   chmod 700 "$plugin_data"
   if [[ -f "$db" && -f "$backup" ]]; then
+    if [[ ! -f "$manifest" ]]; then
+      echo "error: database and backup exist without a corpus manifest: $plugin_data" >&2
+      echo "qualify and promote the matching manifest; corpus identity cannot be inferred safely" >&2
+      exit 1
+    fi
     echo "support knowledge base already exists; leaving it unchanged"
     return
   fi
@@ -66,6 +99,7 @@ prepare() {
     --db "$db" \
     --input "$project_dir/examples/support-governed.jsonl" \
     --backup "$backup" \
+    --manifest "$project_dir/examples/support-corpus-manifest.json" \
     --audience support \
     --max-visibility internal
 }
@@ -165,7 +199,6 @@ conversations() {
   [[ "$failures" -eq 0 ]]
 }
 
-command=${1:-}
 case "$command" in
   prepare)
     prepare

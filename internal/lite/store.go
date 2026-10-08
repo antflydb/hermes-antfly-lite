@@ -3,9 +3,12 @@ package lite
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 
 	"github.com/antflydb/antfly/go/pkg/antflylite"
+	"github.com/antflydb/hermes-antfly-lite/internal/corpus"
 	"github.com/antflydb/hermes-antfly-lite/internal/evidence"
 )
 
@@ -15,7 +18,8 @@ const (
 )
 
 type Store struct {
-	db *antflylite.DB
+	db           *antflylite.DB
+	manifestPath string
 }
 
 func OpenReadonly(path string) (*Store, error) {
@@ -26,7 +30,7 @@ func OpenReadonly(path string) (*Store, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open Antfly Lite database read-only: %w", err)
 	}
-	return &Store{db: db}, nil
+	return &Store{db: db, manifestPath: corpus.PathForDatabase(path)}, nil
 }
 
 func (s *Store) Close() error {
@@ -38,7 +42,21 @@ func (s *Store) Status(context.Context) (json.RawMessage, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read knowledge status: %w", err)
 	}
-	return json.RawMessage(value), nil
+	var status map[string]any
+	if err := json.Unmarshal(value, &status); err != nil {
+		return nil, fmt.Errorf("decode knowledge status: %w", err)
+	}
+	manifest, err := corpus.Read(s.manifestPath)
+	if err == nil {
+		status["corpus"] = manifest
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("read knowledge corpus manifest: %w", err)
+	}
+	combined, err := json.Marshal(status)
+	if err != nil {
+		return nil, fmt.Errorf("encode knowledge status: %w", err)
+	}
+	return json.RawMessage(combined), nil
 }
 
 func (s *Store) Search(_ context.Context, query string, limit int) (json.RawMessage, error) {

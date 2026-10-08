@@ -5,17 +5,29 @@ project_dir=$(cd "$(dirname "$0")/.." && pwd)
 repository=""
 source_ref="main"
 output=""
+manifest=""
+corpus_id=""
+health_query=""
+retrieval_suite=""
+conversation_suite=""
 audience="support"
 visibility="public"
 paths=()
 
 usage() {
   cat <<'EOF'
-Usage: scripts/import-github-docs.sh --repo OWNER/REPO --output FILE [OPTIONS]
+Usage: scripts/import-github-docs.sh --repo OWNER/REPO --output FILE \
+  --manifest FILE --corpus-id ID --health-query QUERY \
+  --retrieval-suite PATH --path PATH [OPTIONS]
 
 Options:
   --ref REF                 Branch, tag, or commit (default: main)
   --path PATH               Repository-relative file/directory; repeatable
+  --manifest FILE           New corpus manifest output
+  --corpus-id ID            Stable identifier for this corpus
+  --health-query QUERY      Broad query expected to match the corpus
+  --retrieval-suite PATH    Plugin-relative deterministic evaluation suite
+  --conversation-suite PATH Optional plugin-relative agent evaluation suite
   --audience AUDIENCE       Governed audience (default: support)
   --visibility VISIBILITY   public, internal, or restricted (default: public)
 
@@ -29,6 +41,11 @@ while [[ $# -gt 0 ]]; do
     --repo) repository=${2:-}; shift 2 ;;
     --ref) source_ref=${2:-}; shift 2 ;;
     --output) output=${2:-}; shift 2 ;;
+    --manifest) manifest=${2:-}; shift 2 ;;
+    --corpus-id) corpus_id=${2:-}; shift 2 ;;
+    --health-query) health_query=${2:-}; shift 2 ;;
+    --retrieval-suite) retrieval_suite=${2:-}; shift 2 ;;
+    --conversation-suite) conversation_suite=${2:-}; shift 2 ;;
     --path) paths+=("${2:-}"); shift 2 ;;
     --audience) audience=${2:-}; shift 2 ;;
     --visibility) visibility=${2:-}; shift 2 ;;
@@ -41,9 +58,10 @@ if [[ ! "$repository" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
   echo "error: --repo must be OWNER/REPO" >&2
   exit 2
 fi
-if [[ -z "$output" || ! "$source_ref" =~ ^[A-Za-z0-9._/-]+$ || "$source_ref" == -* || \
+if [[ -z "$output" || -z "$manifest" || -z "$corpus_id" || -z "$health_query" || -z "$retrieval_suite" || \
+  ! "$source_ref" =~ ^[A-Za-z0-9._/-]+$ || "$source_ref" == -* || \
   "$source_ref" == /* || "$source_ref" == */ || "$source_ref" == *..* ]]; then
-  echo "error: --output is required and --ref must be a safe Git ref" >&2
+  echo "error: output, manifest, corpus, health query, retrieval suite, and a safe Git ref are required" >&2
   exit 2
 fi
 if [[ ${#paths[@]} -eq 0 ]]; then
@@ -56,8 +74,8 @@ for path in "${paths[@]}"; do
     exit 2
   fi
 done
-if [[ -e "$output" ]]; then
-  echo "error: output already exists: $output" >&2
+if [[ "$output" == "$manifest" || -e "$output" || -e "$manifest" ]]; then
+  echo "error: output paths must differ and must not already exist: $output $manifest" >&2
   exit 1
 fi
 if [[ ! -x "$project_dir/bin/antfly-hermes-github" ]]; then
@@ -87,9 +105,16 @@ args=(
   --commit "$commit"
   --updated-at "$updated_at"
   --output "$output"
+  --manifest "$manifest"
+  --corpus-id "$corpus_id"
+  --health-query "$health_query"
+  --retrieval-suite "$retrieval_suite"
   --audience "$audience"
   --visibility "$visibility"
 )
+if [[ -n "$conversation_suite" ]]; then
+  args+=(--conversation-suite "$conversation_suite")
+fi
 for path in "${paths[@]}"; do
   args+=(--path "$path")
 done

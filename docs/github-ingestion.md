@@ -15,6 +15,11 @@ scripts/import-github-docs.sh \
   --repo antflydb/antfly \
   --ref main \
   --output /tmp/antfly-docs.jsonl \
+  --manifest /tmp/antfly-docs.manifest.json \
+  --corpus-id antfly-technical-docs \
+  --health-query "Antfly Lite embedded local database" \
+  --retrieval-suite evals/antfly-github-docs.jsonl \
+  --conversation-suite evals/antfly-github-conversations.jsonl \
   --path docs/introduction.mdx \
   --path docs/guides/quickstart.mdx \
   --path docs/guides/lite.mdx
@@ -24,7 +29,7 @@ The importer resolves `--ref` to an immutable commit SHA before checkout. It
 accepts UTF-8 Markdown, MDX, text, and reStructuredText; rejects escaping paths,
 symlinks, oversized files, malformed repository identities, and existing output
 paths; chunks text below the connector's 16 KiB record limit; and writes the
-output with `0600` permissions.
+output and manifest with `0600` permissions.
 
 Every record includes a stable path-derived ID, commit-pinned GitHub blob URL,
 repository, commit SHA, source path, chunk position, audience, visibility,
@@ -41,6 +46,7 @@ bin/antfly-hermes-setup \
   --db /tmp/knowledge-candidate.aflite \
   --input /tmp/antfly-docs.jsonl \
   --backup /tmp/knowledge-candidate.afb \
+  --manifest /tmp/antfly-docs.manifest.json \
   --audience support \
   --max-visibility public
 
@@ -55,10 +61,14 @@ bin/antfly-hermes-eval \
 ```
 
 Promotion requires stopped readers and writers. Archive the current `.aflite`
-and `.afb`, copy the qualified candidate into the plugin data directory as
-`knowledge.aflite` and `knowledge.afb`, rerun `doctor` and the retrieval suite
-against those final paths, then restart Hermes. Retain the archived pair for
-rollback.
+and `.afb`, archive the current manifest, then copy the qualified candidate into
+the plugin data directory as `knowledge.aflite`, `knowledge.afb`, and
+`knowledge.manifest.json`. Rerun `doctor` and the retrieval suite against those
+final paths, then restart Hermes. Retain the archived artifacts for rollback.
+
+The dashboard launcher discovers the profile-specific plugin-data namespace and
+uses the active manifest's health query and evaluation suites automatically. An
+environment override is only needed for an intentional one-off test.
 
 ## Synchronization policy
 

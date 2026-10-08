@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "antfly-hermes-lite",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Local-first knowledge retrieval for Hermes, powered by Antfly Lite.",
   "author": {
     "name": "Antfly"
@@ -11,4 +11,3 @@
   "license": "Elastic-2.0",
   "keywords": ["antfly", "hermes", "knowledge", "retrieval", "mcp", "local-first"]
 }
-

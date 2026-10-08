@@ -73,7 +73,9 @@ HERMES_BIN="$HOME/.local/bin/hermes" \
 ```
 
 `prepare` writes `knowledge.aflite` and its portable `knowledge.afb` backup to
-the plugin's namespaced data directory with private permissions. It indexes six
+the plugin's dynamically discovered, namespaced data directory with private
+permissions. It also installs `knowledge.manifest.json`, which identifies the
+corpus and its health and evaluation settings. It indexes six
 of the twelve fixture records; the remaining six are intentionally rejected by
 the lifecycle, audience, visibility, or time policy. `verify` requires an Antfly
 health check plus 8/8 deterministic retrieval cases, full expected recall, zero
@@ -125,11 +127,10 @@ required evidence in its answer, cites the expected source URLs, and avoids the
 case's forbidden claim.
 
 The defaults target `supportpilot`, `openai-codex`, and `gpt-5.6-sol`. Override
-them with `HERMES_PROFILE`, `HERMES_PROVIDER`, and `HERMES_MODEL`. The data and
-plugin paths can likewise be overridden. The portable Support skill uses its
-Hermes-qualified name by default; override `HERMES_SUPPORT_SKILL` only if the
-plugin identity changes. Run the script without arguments for the complete
-list.
+them with `HERMES_PROFILE`, `HERMES_PROVIDER`, and `HERMES_MODEL`. The scripts
+discover the plugin-data namespace and qualified Support skill from the profile;
+the data and plugin paths can still be overridden. Run the script without
+arguments for the complete list.
 
 ## Production exit criteria
 

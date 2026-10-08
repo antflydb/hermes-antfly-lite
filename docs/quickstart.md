@@ -12,21 +12,24 @@ enable it:
 
 ```bash
 cd ~/.hermes/plugins
-tar -xzf ~/Downloads/antfly-hermes-lite-0.0.1-PLATFORM.tar.gz
-mv antfly-hermes-lite-0.0.1-PLATFORM antfly-hermes-lite
+tar -xzf ~/Downloads/antfly-hermes-lite-0.1.0-PLATFORM.tar.gz
+mv antfly-hermes-lite-0.1.0-PLATFORM antfly-hermes-lite
 hermes plugins validate ~/.hermes/plugins/antfly-hermes-lite
 hermes plugins enable antfly-hermes-lite
 ```
 
 The connector stores data under Hermes' stable `${PLUGIN_DATA}` namespace, not
-inside the replaceable plugin directory. Obtain the resolved path from Hermes'
-plugin/MCP diagnostics, then create the first Support corpus:
+inside the replaceable plugin directory. The included pilot scripts discover
+that namespace from the selected Hermes profile; no installation-specific hash
+is hardcoded. For a manual setup, obtain the resolved path from Hermes'
+plugin/MCP diagnostics, then create the first Support corpus and its manifest:
 
 ```bash
 ~/.hermes/plugins/antfly-hermes-lite/bin/antfly-hermes-setup \
   --db PATH_TO_PLUGIN_DATA/knowledge.aflite \
   --input ./support-documents.jsonl \
   --backup PATH_TO_PLUGIN_DATA/knowledge.afb \
+  --manifest ./support-corpus-manifest.json \
   --audience support \
   --max-visibility internal
 
@@ -38,6 +41,10 @@ plugin/MCP diagnostics, then create the first Support corpus:
 
 Restart the Hermes session after enabling the plugin. Ask a known-answer Support
 question and confirm that the response cites an approved source URL.
+
+The manifest is installed as `knowledge.manifest.json` beside the database.
+`knowledge_status` reports its corpus identity and provenance, while the pilot
+launcher uses its health query and plugin-relative evaluation suites.
 
 The Git repository is the source distribution. Native runtime binaries are
 delivered through platform-specific release archives; cloning the repository

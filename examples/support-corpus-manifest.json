@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "corpus_id": "support-governed-fixture",
+  "audience": "support",
+  "visibility": "internal",
+  "health_query": "password reset",
+  "source": {
+    "kind": "fixture",
+    "paths": ["examples/support-governed.jsonl"]
+  },
+  "evaluation": {
+    "retrieval_suite": "evals/support-retrieval.jsonl",
+    "conversation_suite": "evals/support-agent-conversations.jsonl"
+  },
+  "counts": {
+    "files": 1,
+    "chunks": 6
+  }
+}

@@ -13,6 +13,7 @@ import (
 
 	"github.com/antflydb/antfly/go/pkg/antflylite"
 	"github.com/antflydb/hermes-antfly-lite/internal/buildinfo"
+	"github.com/antflydb/hermes-antfly-lite/internal/corpus"
 	"github.com/antflydb/hermes-antfly-lite/internal/policy"
 )
 
@@ -24,6 +25,7 @@ func main() {
 	inputPath := flag.String("input", "", "JSONL source file; mutually exclusive with --restore")
 	restorePath := flag.String("restore", "", "portable .afb backup to restore; mutually exclusive with --input")
 	backupPath := flag.String("backup", "", "optional portable .afb backup path")
+	manifestInput := flag.String("manifest", "", "optional validated corpus manifest to install beside the database")
 	audience := flag.String("audience", "support", "target audience: support, research, sales, marketing, or hr")
 	maxVisibility := flag.String("max-visibility", "internal", "maximum visibility: public, internal, or restricted")
 	showVersion := flag.Bool("version", false, "print build identity and exit")
@@ -46,6 +48,22 @@ func main() {
 	} else if !errors.Is(err, os.ErrNotExist) {
 		fmt.Fprintf(os.Stderr, "error: inspect database path: %v\n", err)
 		os.Exit(1)
+	}
+	manifestOutput := corpus.PathForDatabase(*dbPath)
+	manifestResult := ""
+	var corpusManifest corpus.Manifest
+	if *manifestInput != "" {
+		manifestResult = manifestOutput
+		var err error
+		corpusManifest, err = corpus.Read(*manifestInput)
+		if err != nil {
+			fail("read corpus manifest", err)
+		}
+		if _, err := os.Stat(manifestOutput); err == nil {
+			fail("install corpus manifest", fmt.Errorf("target already exists: %s", manifestOutput))
+		} else if !errors.Is(err, os.ErrNotExist) {
+			fail("inspect corpus manifest target", err)
+		}
 	}
 	if err := os.MkdirAll(filepath.Dir(*dbPath), 0o700); err != nil {
 		fmt.Fprintf(os.Stderr, "error: create database directory: %v\n", err)
@@ -73,6 +91,11 @@ func main() {
 		if !check.Valid {
 			fail("check restored database", errors.New("integrity report is not valid"))
 		}
+		if *manifestInput != "" {
+			if err := corpus.WriteNew(manifestOutput, corpusManifest); err != nil {
+				fail("install corpus manifest", err)
+			}
+		}
 		fmt.Printf("restored=%s source=%s valid=%t records=%d\n", *dbPath, *restorePath, check.Valid, check.RecordCount)
 		return
 	}
@@ -80,6 +103,9 @@ func main() {
 	ingestPolicy := policy.IngestPolicy{Audience: *audience, MaxVisibility: *maxVisibility, Now: time.Now().UTC()}
 	if err := ingestPolicy.Validate(); err != nil {
 		fail("validate ingestion policy", err)
+	}
+	if *manifestInput != "" && (corpusManifest.Audience != *audience || corpusManifest.Visibility != *maxVisibility) {
+		fail("validate corpus manifest", errors.New("manifest audience and visibility must match ingestion policy"))
 	}
 	writes, skipped, err := loadDocuments(*inputPath, ingestPolicy)
 	if err != nil {
@@ -89,6 +115,9 @@ func main() {
 	if len(writes) == 0 {
 		fmt.Fprintln(os.Stderr, "error: input contains no approved documents")
 		os.Exit(1)
+	}
+	if *manifestInput != "" && corpusManifest.Counts.Chunks != len(writes) {
+		fail("validate corpus manifest", fmt.Errorf("manifest declares %d chunks but ingestion approved %d", corpusManifest.Counts.Chunks, len(writes)))
 	}
 
 	db, err := antflylite.Create(*dbPath)
@@ -131,14 +160,19 @@ func main() {
 			fail("secure backup permissions", err)
 		}
 	}
+	if *manifestInput != "" {
+		if err := corpus.WriteNew(manifestOutput, corpusManifest); err != nil {
+			fail("install corpus manifest", err)
+		}
+	}
 
 	skippedTotal := 0
 	for _, count := range skipped {
 		skippedTotal += count
 	}
 	skippedJSON, _ := json.Marshal(skipped)
-	fmt.Printf("created=%s approved=%d skipped=%d skip_reasons=%s audience=%s max_visibility=%s valid=%t backup=%s\n",
-		*dbPath, len(writes), skippedTotal, skippedJSON, *audience, *maxVisibility, check.Valid, *backupPath)
+	fmt.Printf("created=%s approved=%d skipped=%d skip_reasons=%s audience=%s max_visibility=%s valid=%t backup=%s manifest=%s\n",
+		*dbPath, len(writes), skippedTotal, skippedJSON, *audience, *maxVisibility, check.Valid, *backupPath, manifestResult)
 }
 
 func loadDocuments(path string, ingestPolicy policy.IngestPolicy) ([]antflylite.WriteIntent, map[string]int, error) {

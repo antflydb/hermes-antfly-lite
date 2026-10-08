@@ -4,7 +4,7 @@ set -euo pipefail
 project_dir=$(cd "$(dirname "$0")/.." && pwd)
 cd "$project_dir"
 
-jq empty plugin.json mcp.json
+jq empty plugin.json mcp.json examples/support-corpus-manifest.json
 test "$(jq -r '.name' plugin.json)" = "antfly-hermes-lite"
 test "$(jq -r '.mcpServers["antfly-knowledge"].type' mcp.json)" = "stdio"
 test "$(jq -r '.mcpServers["antfly-knowledge"].command' mcp.json)" = "./bin/antfly-hermes-mcp"
@@ -13,9 +13,15 @@ if grep -Eq '^replace[[:space:]]' go.mod; then
   echo "error: release module must not contain a replace directive" >&2
   exit 1
 fi
-go test ./internal/mcp ./internal/policy ./internal/evidence ./internal/githubdocs ./cmd/antfly-hermes-github
-go vet ./internal/mcp ./internal/policy ./internal/evidence ./internal/githubdocs
+go test ./internal/mcp ./internal/policy ./internal/evidence ./internal/githubdocs ./internal/corpus ./cmd/antfly-hermes-github
+go vet ./internal/mcp ./internal/policy ./internal/evidence ./internal/githubdocs ./internal/corpus
 bash -n scripts/*.sh
+source scripts/lib/hermes-plugin.sh
+helper_test_dir=$(mktemp -d "${TMPDIR:-/tmp}/antfly-hermes-helper.XXXXXX")
+trap 'rm -rf "$helper_test_dir"' EXIT
+mkdir -p "$helper_test_dir/plugin-data/agent-plugin-antfly-hermes-lite-test1234"
+test "$(ANTFLY_PLUGIN_DATA= antfly_resolve_plugin_data "$helper_test_dir")" = \
+  "$helper_test_dir/plugin-data/agent-plugin-antfly-hermes-lite-test1234"
 test -x scripts/build-local.sh
 test -x scripts/smoke.sh
 test -x scripts/concurrency-smoke.sh

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/antflydb/hermes-antfly-lite/internal/buildinfo"
+	"github.com/antflydb/hermes-antfly-lite/internal/corpus"
 	"github.com/antflydb/hermes-antfly-lite/internal/githubdocs"
 )
 
@@ -27,6 +28,11 @@ func main() {
 	commit := flag.String("commit", "", "lowercase 40-character source commit SHA")
 	updatedAt := flag.String("updated-at", "", "source commit time in RFC3339")
 	output := flag.String("output", "", "new governed JSONL output path")
+	manifestPath := flag.String("manifest", "", "new corpus manifest output path")
+	corpusID := flag.String("corpus-id", "", "stable corpus identifier")
+	healthQuery := flag.String("health-query", "", "broad query expected to match the corpus")
+	retrievalSuite := flag.String("retrieval-suite", "", "plugin-relative retrieval evaluation suite")
+	conversationSuite := flag.String("conversation-suite", "", "optional plugin-relative conversation suite")
 	audience := flag.String("audience", "support", "record audience")
 	visibility := flag.String("visibility", "public", "record visibility")
 	state := flag.String("state", "approved", "record lifecycle state")
@@ -38,8 +44,13 @@ func main() {
 		fmt.Println(buildinfo.String())
 		return
 	}
-	if *repoDir == "" || *repository == "" || *commit == "" || *updatedAt == "" || *output == "" || len(paths) == 0 {
-		fmt.Fprintln(os.Stderr, "error: --repo-dir, --repo, --commit, --updated-at, --output, and at least one --path are required")
+	if *repoDir == "" || *repository == "" || *commit == "" || *updatedAt == "" || *output == "" ||
+		*manifestPath == "" || *corpusID == "" || *healthQuery == "" || *retrievalSuite == "" || len(paths) == 0 {
+		fmt.Fprintln(os.Stderr, "error: repository inputs, --output, --manifest, --corpus-id, --health-query, --retrieval-suite, and at least one --path are required")
+		os.Exit(2)
+	}
+	if *manifestPath == *output {
+		fmt.Fprintln(os.Stderr, "error: --manifest and --output must be different paths")
 		os.Exit(2)
 	}
 	parsedUpdatedAt, err := time.Parse(time.RFC3339, *updatedAt)
@@ -53,6 +64,21 @@ func main() {
 	})
 	if err != nil {
 		fail("convert GitHub documentation", err)
+	}
+	manifest := corpus.Manifest{
+		SchemaVersion: corpus.SchemaVersion,
+		CorpusID:      *corpusID,
+		Audience:      *audience,
+		Visibility:    *visibility,
+		HealthQuery:   *healthQuery,
+		Source: corpus.Source{
+			Kind: "github", Repository: *repository, Commit: *commit, Paths: []string(paths),
+		},
+		Evaluation: corpus.Evaluation{RetrievalSuite: *retrievalSuite, ConversationSuite: *conversationSuite},
+		Counts:     corpus.Counts{Files: summary.Files, Chunks: summary.Chunks},
+	}
+	if err := manifest.Validate(); err != nil {
+		fail("validate corpus manifest", err)
 	}
 	file, err := os.OpenFile(*output, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
@@ -73,8 +99,11 @@ func main() {
 	if err := file.Close(); err != nil {
 		fail("close JSONL output", err)
 	}
-	fmt.Printf("created=%s repository=%s commit=%s files=%d chunks=%d source_bytes=%d\n",
-		*output, *repository, *commit, summary.Files, summary.Chunks, summary.Bytes)
+	if err := corpus.WriteNew(*manifestPath, manifest); err != nil {
+		fail("write corpus manifest", err)
+	}
+	fmt.Printf("created=%s manifest=%s repository=%s commit=%s files=%d chunks=%d source_bytes=%d\n",
+		*output, *manifestPath, *repository, *commit, summary.Files, summary.Chunks, summary.Bytes)
 }
 
 func fail(operation string, err error) {

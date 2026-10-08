@@ -1,8 +1,9 @@
 # Antfly Lite Knowledge Connector for Hermes
 
-Phase 0 prototype of a local-first knowledge connector. It packages a narrow
-stdio MCP server for Hermes and stores the knowledge base in one Antfly Lite
-`.aflite` database.
+Production-oriented, local-first knowledge connector for Hermes. It packages a
+narrow stdio MCP server, stores the knowledge base in one Antfly Lite `.aflite`
+database, and keeps corpus provenance and qualification settings in a validated
+sidecar manifest.
 
 This repository is a pre-release Support golden path. The Go binding is pinned
 to the Antfly v0.2.1 source commit with a verified module checksum. Native
@@ -30,7 +31,7 @@ see [GitHub documentation ingestion](docs/github-ingestion.md).
 
 - `search_knowledge`: full-text search over approved knowledge chunks.
 - `get_source`: retrieve one stored source by its stable identifier.
-- `knowledge_status`: report database and retrieval capabilities.
+- `knowledge_status`: report database capabilities and active corpus provenance.
 
 All three tools are read-only. Database creation, ingestion, indexing, backup,
 restore, and promotion are human-operated commands and are never exposed to the
@@ -103,11 +104,17 @@ backup:
 ```bash
 bin/antfly-hermes-setup \
   --db ./knowledge.aflite \
-  --input examples/support-docs.jsonl \
-  --backup ./knowledge.afb
+  --input examples/support-governed.jsonl \
+  --backup ./knowledge.afb \
+  --manifest examples/support-corpus-manifest.json \
+  --audience support \
+  --max-visibility internal
 ```
 
-The setup path indexes only records whose `state` is `approved`; other lifecycle
+The manifest records the corpus identity, provenance, health query, and
+plugin-relative evaluation suites, and is installed beside the database as
+`knowledge.manifest.json`. The setup path indexes only records whose `state` is
+`approved`; other lifecycle
 states, other audiences, excessive visibility, future-effective records, and
 expired records are skipped before indexing. It creates the database and backup
 with owner-only `0600` permissions. See the

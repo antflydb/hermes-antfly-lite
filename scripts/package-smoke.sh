@@ -41,6 +41,8 @@ test -x "$package_root/bin/antfly-hermes-github"
 jq -ce . "$package_root/evals/support-agent-conversations.jsonl" >/dev/null
 jq -ce . "$package_root/evals/antfly-github-conversations.jsonl" >/dev/null
 jq -ce . "$package_root/evals/antfly-github-docs.jsonl" >/dev/null
+jq -e '.schema_version == 1 and .corpus_id == "support-governed-fixture"' \
+  "$package_root/examples/support-corpus-manifest.json" >/dev/null
 
 version_output=$("$package_root/bin/antfly-hermes-mcp" --version)
 if [[ "$version_output" != *"version=$version"* || "$version_output" != *"target=$target"* ]]; then
@@ -64,12 +66,18 @@ governed_db="$data_dir/governed.aflite"
 "$package_root/bin/antfly-hermes-setup" \
   --db "$governed_db" \
   --input "$package_root/examples/support-governed.jsonl" \
+  --manifest "$package_root/examples/support-corpus-manifest.json" \
   --audience support \
   --max-visibility internal >/dev/null
 "$package_root/bin/antfly-hermes-eval" \
   --db "$governed_db" \
   --suite "$package_root/evals/support-retrieval.jsonl" \
   | jq -e '.passed and .expected_recall == 1 and .forbidden_leakage == 0 and .citation_validity == 1' >/dev/null
+
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"knowledge_status","arguments":{}}}' \
+  | "$package_root/bin/antfly-hermes-mcp" --db "$governed_db" \
+  | jq -e '.result.structuredContent.corpus.corpus_id == "support-governed-fixture"' >/dev/null
 
 responses="$package_test_dir/responses.jsonl"
 printf '%s\n' \
