@@ -34,11 +34,6 @@ retrieval, automatic fact and completed-turn capture, curated-memory mirroring,
 and pre-compression checkpoints. Its default lexical mode needs no API key,
 model download, Docker, or separate service.
 
-The repository also contains a universal, no-download Hermes catalog bundle in
-`catalog/antfly-hermes-lite`. It selects a checksummed runtime for macOS arm64,
-Linux amd64, or Linux arm64 and expands only that payload into profile-local
-plugin data on first use.
-
 ## Model-visible knowledge tools
 
 - `search_knowledge`: full-text search over approved knowledge chunks.

@@ -1,0 +1,15 @@
+{
+  "version": "0.3.0",
+  "payload_source_commit": "36af3c18387bb12b885c33281a436b56be7efa05",
+  "payloads": {
+    "darwin-arm64": {
+      "sha256": "37d54b9945361d825741af6db19e33f266e15ce45d894ba38da7028eb43dca0b"
+    },
+    "linux-amd64": {
+      "sha256": "13f20fcd90e2098a8d29041a8d18abf78b4feecab96a00f09af63057a655ba30"
+    },
+    "linux-arm64": {
+      "sha256": "e1c870385e40c658e43886ad772b9bc071e2dd9764d872c61095c62738d4f64c"
+    }
+  }
+}

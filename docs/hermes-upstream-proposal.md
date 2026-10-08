@@ -8,7 +8,10 @@ preserving Hermes' SQLite session ledger and built-in Markdown compatibility.
 ## Proposed contribution sequence
 
 1. Publish `antfly-hermes-lite` in the Hermes plugin catalog as an installable
-   `MemoryProvider` with prebuilt macOS and Linux artifacts.
+   `MemoryProvider` using the universal bundle in
+   `catalog/antfly-hermes-lite`. It carries immutable, checksummed macOS arm64,
+   Linux amd64, and Linux arm64 payloads and extracts only the current host's
+   runtime into profile-local plugin data.
 2. Add Antfly Lite to `hermes memory setup` discovery and documentation as the
    local-first hybrid-memory option.
 3. Qualify automatic recall, completed-turn synchronization, curated-memory
@@ -36,6 +39,15 @@ review memory and knowledge integration as separate capabilities.
   inference-fallback tests;
 - a Support-agent pilot using commit-pinned Antfly documentation;
 - explicit limitations and a rollback path to built-in memory.
+
+## Submission gate
+
+Hermes catalog CI performs an unauthenticated clone of the pinned repository.
+The repository must therefore be public before submitting the entry. Generate
+the catalog YAML only after the universal-bundle commit is final so its `sha`
+can pin that exact commit. Until then, validate locally with
+`scripts/catalog-smoke.sh` and Hermes' `plugins validate` command; do not open a
+catalog PR whose clone gate is guaranteed to fail.
 
 ## Suggested maintainer pitch
 
