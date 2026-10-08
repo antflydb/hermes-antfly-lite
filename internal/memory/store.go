@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,8 +17,9 @@ import (
 )
 
 const (
-	indexName = "memory_text"
-	maxText   = 16 * 1024
+	indexName       = "memory_text"
+	vectorIndexName = "memory_embedding_v1"
+	maxText         = 16 * 1024
 )
 
 const schemaJSON = `{"version":1,"default_type":"memory","document_schemas":{"memory":{"schema":{"type":"object","required":["id","kind","text","scope","created_at","updated_at"],"additionalProperties":true}}}}`
@@ -58,6 +60,7 @@ type Request struct {
 	Limit      int            `json:"limit,omitempty"`
 	Context    Context        `json:"context,omitempty"`
 	Metadata   map[string]any `json:"metadata,omitempty"`
+	Embedding  []float64      `json:"embedding,omitempty"`
 }
 
 type SearchHit struct {
@@ -138,6 +141,9 @@ func remember(path string, request Request) (Record, error) {
 	if request.ID == "" {
 		request.ID = stableID(request.Kind, request.Scope, request.Text, request.Context)
 	}
+	if err := validateEmbedding(request.Embedding); err != nil {
+		return Record{}, err
+	}
 	if len(request.ID) > 512 || strings.ContainsAny(request.ID, "\r\n\x00") {
 		return Record{}, errors.New("id is invalid")
 	}
@@ -148,7 +154,7 @@ func remember(path string, request Request) (Record, error) {
 		Workspace: request.Context.Workspace, SessionID: request.Context.SessionID,
 		Source: request.Source, CreatedAt: now, UpdatedAt: now, Metadata: request.Metadata,
 	}
-	raw, err := json.Marshal(record)
+	raw, err := marshalRecord(record, request.Embedding)
 	if err != nil {
 		return Record{}, fmt.Errorf("encode memory: %w", err)
 	}
@@ -157,11 +163,16 @@ func remember(path string, request Request) (Record, error) {
 		return Record{}, err
 	}
 	defer db.Close()
+	if len(request.Embedding) > 0 {
+		if err := ensureVectorIndex(db, len(request.Embedding)); err != nil {
+			return Record{}, err
+		}
+	}
 	if previous, lookupErr := db.Raw(record.ID); lookupErr == nil && len(previous) > 0 {
 		var existing Record
 		if json.Unmarshal(previous, &existing) == nil && existing.CreatedAt != "" {
 			record.CreatedAt = existing.CreatedAt
-			raw, _ = json.Marshal(record)
+			raw, _ = marshalRecord(record, request.Embedding)
 		}
 	}
 	if err := db.Batch([]antflylite.WriteIntent{{Key: record.ID, Value: raw}}, uint64(time.Now().UnixNano())); err != nil {
@@ -194,10 +205,28 @@ func search(path string, request Request) (SearchResult, error) {
 		return SearchResult{}, fmt.Errorf("open memory database read-only: %w", err)
 	}
 	defer db.Close()
-	searchRequest, _ := json.Marshal(map[string]any{
+	if err := validateEmbedding(request.Embedding); err != nil {
+		return SearchResult{}, err
+	}
+	searchBody := map[string]any{
 		"mode": "full_text", "index_name": indexName, "text_query_type": "match",
 		"field": "text", "text": request.Query, "limit": 100,
-	})
+	}
+	if len(request.Embedding) > 0 {
+		ready, readyErr := vectorIndexMatches(db, len(request.Embedding))
+		if readyErr != nil {
+			return SearchResult{}, readyErr
+		}
+		if ready {
+			searchBody = map[string]any{
+				"full_text_search": map[string]any{"match": map[string]any{"field": "text", "text": request.Query}},
+				"embeddings":       map[string]any{vectorIndexName: request.Embedding},
+				"indexes":          []string{vectorIndexName}, "merge_config": map[string]any{"strategy": "rrf"},
+				"limit": 100,
+			}
+		}
+	}
+	searchRequest, _ := json.Marshal(searchBody)
 	raw, err := db.SearchJSON(searchRequest)
 	if err != nil {
 		return SearchResult{}, fmt.Errorf("search memory: %w", err)
@@ -212,14 +241,49 @@ func search(path string, request Request) (SearchResult, error) {
 		return SearchResult{}, fmt.Errorf("decode memory search: %w", err)
 	}
 	result := SearchResult{Query: request.Query, Hits: []SearchHit{}}
+	seen := map[string]struct{}{}
 	for _, rawHit := range envelope.Hits {
 		var record Record
 		if json.Unmarshal([]byte(rawHit.StoredJSON), &record) != nil || !canAccess(record, request.Context) {
 			continue
 		}
+		if _, duplicate := seen[record.ID]; duplicate {
+			continue
+		}
+		seen[record.ID] = struct{}{}
 		result.Hits = append(result.Hits, SearchHit{Record: record, Score: rawHit.Score})
 		if len(result.Hits) == request.Limit {
 			break
+		}
+	}
+	if len(request.Embedding) > 0 {
+		var hybrid struct {
+			Responses []struct {
+				Hits struct {
+					Hits []struct {
+						Score  float64 `json:"_score"`
+						Source Record  `json:"_source"`
+					} `json:"hits"`
+				} `json:"hits"`
+			} `json:"responses"`
+		}
+		if err := json.Unmarshal(raw, &hybrid); err != nil {
+			return SearchResult{}, fmt.Errorf("decode hybrid memory search: %w", err)
+		}
+		for _, response := range hybrid.Responses {
+			for _, hit := range response.Hits.Hits {
+				if !canAccess(hit.Source, request.Context) {
+					continue
+				}
+				if _, duplicate := seen[hit.Source.ID]; duplicate {
+					continue
+				}
+				seen[hit.Source.ID] = struct{}{}
+				result.Hits = append(result.Hits, SearchHit{Record: hit.Source, Score: hit.Score})
+				if len(result.Hits) == request.Limit {
+					return result, nil
+				}
+			}
 		}
 	}
 	return result, nil
@@ -292,6 +356,105 @@ func stableID(kind, scope, text string, context Context) string {
 	}
 	digest := sha256.Sum256([]byte(strings.Join([]string{kind, scope, identity, text}, "\x00")))
 	return "memory:" + hex.EncodeToString(digest[:16])
+}
+
+func marshalRecord(record Record, embedding []float64) ([]byte, error) {
+	raw, err := json.Marshal(record)
+	if err != nil {
+		return nil, fmt.Errorf("encode memory: %w", err)
+	}
+	if len(embedding) == 0 {
+		return raw, nil
+	}
+	var document map[string]any
+	if err := json.Unmarshal(raw, &document); err != nil {
+		return nil, fmt.Errorf("prepare embedded memory: %w", err)
+	}
+	document["_embeddings"] = map[string]any{vectorIndexName: embedding}
+	raw, err = json.Marshal(document)
+	if err != nil {
+		return nil, fmt.Errorf("encode embedded memory: %w", err)
+	}
+	return raw, nil
+}
+
+func validateEmbedding(embedding []float64) error {
+	if len(embedding) == 0 {
+		return nil
+	}
+	if len(embedding) < 2 || len(embedding) > 4096 {
+		return errors.New("embedding dimensions must be between 2 and 4096")
+	}
+	for _, value := range embedding {
+		if math.IsNaN(value) || math.IsInf(value, 0) {
+			return errors.New("embedding contains a non-finite value")
+		}
+	}
+	return nil
+}
+
+func ensureVectorIndex(db *antflylite.DB, dims int) error {
+	matches, err := vectorIndexMatches(db, dims)
+	if err != nil || matches {
+		return err
+	}
+	config, _ := json.Marshal(map[string]any{
+		"field": "embedding", "dims": dims, "metric": "cosine", "external": true,
+	})
+	definition, _ := json.Marshal(map[string]any{
+		"name": vectorIndexName, "kind": "dense_vector", "config_json": string(config),
+	})
+	if err := db.AddIndexJSON(definition); err != nil {
+		return fmt.Errorf("create memory vector index: %w", err)
+	}
+	return nil
+}
+
+func vectorIndexMatches(db *antflylite.DB, dims int) (bool, error) {
+	raw, err := db.IndexesJSON()
+	if err != nil {
+		return false, fmt.Errorf("inspect memory indexes: %w", err)
+	}
+	var catalog any
+	if err := json.Unmarshal(raw, &catalog); err != nil {
+		return false, fmt.Errorf("decode memory indexes: %w", err)
+	}
+	definition := findNamedIndex(catalog, vectorIndexName)
+	if definition == nil {
+		return false, nil
+	}
+	configRaw, _ := definition["config_json"].(string)
+	var config struct {
+		Dims int `json:"dims"`
+	}
+	if json.Unmarshal([]byte(configRaw), &config) != nil || config.Dims == 0 {
+		return false, errors.New("memory vector index has invalid configuration")
+	}
+	if config.Dims != dims {
+		return false, fmt.Errorf("embedding dimensions %d do not match existing memory index dimensions %d", dims, config.Dims)
+	}
+	return true, nil
+}
+
+func findNamedIndex(value any, name string) map[string]any {
+	switch typed := value.(type) {
+	case map[string]any:
+		if typed["name"] == name {
+			return typed
+		}
+		for _, child := range typed {
+			if found := findNamedIndex(child, name); found != nil {
+				return found
+			}
+		}
+	case []any:
+		for _, child := range typed {
+			if found := findNamedIndex(child, name); found != nil {
+				return found
+			}
+		}
+	}
+	return nil
 }
 
 func ensureDatabase(path string) error {

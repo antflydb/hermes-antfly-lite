@@ -96,3 +96,33 @@ func TestConcurrentFirstUse(t *testing.T) {
 		}
 	}
 }
+
+func TestHybridSemanticRecall(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "memory.aflite")
+	context := Context{UserID: "alice", SessionID: "s1"}
+	cat, err := remember(dbPath, Request{
+		Text: "Keeps a feline companion", Kind: "fact", Scope: "user", Context: context,
+		Embedding: []float64{1, 0},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := remember(dbPath, Request{
+		Text: "Schedules quarterly finance reviews", Kind: "fact", Scope: "user", Context: context,
+		Embedding: []float64{0, 1},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	result, err := search(dbPath, Request{
+		Query: "household pet", Limit: 2, Context: Context{UserID: "alice", SessionID: "s2"},
+		Embedding: []float64{0.99, 0.01},
+	})
+	if err != nil || len(result.Hits) < 1 || result.Hits[0].ID != cat.ID {
+		t.Fatalf("semantic recall failed: %+v err=%v", result, err)
+	}
+	if _, err := search(dbPath, Request{
+		Query: "household pet", Context: context, Embedding: []float64{1, 0, 0},
+	}); err == nil {
+		t.Fatal("expected an incompatible embedding dimension error")
+	}
+}

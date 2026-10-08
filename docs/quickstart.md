@@ -12,8 +12,8 @@ enable it:
 
 ```bash
 cd ~/.hermes/plugins
-tar -xzf ~/Downloads/antfly-hermes-lite-0.2.0-PLATFORM.tar.gz
-mv antfly-hermes-lite-0.2.0-PLATFORM antfly-hermes-lite
+tar -xzf ~/Downloads/antfly-hermes-lite-0.3.0-PLATFORM.tar.gz
+mv antfly-hermes-lite-0.3.0-PLATFORM antfly-hermes-lite
 hermes plugins validate ~/.hermes/plugins/antfly-hermes-lite
 hermes plugins enable antfly-hermes-lite
 hermes config set memory.provider antfly-hermes-lite

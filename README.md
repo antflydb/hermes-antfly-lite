@@ -29,9 +29,10 @@ see [GitHub documentation ingestion](docs/github-ingestion.md).
 
 To make Antfly Lite the active context and memory backend for a Hermes profile,
 see the [native memory provider guide](docs/memory-provider.md). The initial
-provider supplies scoped lexical recall, automatic completed-turn capture,
-curated-memory mirroring, and pre-compression checkpoints without an API key,
-model download, Docker, or a separate service.
+provider supplies scoped lexical recall, optional Antfly Inference hybrid
+retrieval, automatic fact and completed-turn capture, curated-memory mirroring,
+and pre-compression checkpoints. Its default lexical mode needs no API key,
+model download, Docker, or separate service.
 
 ## Model-visible knowledge tools
 

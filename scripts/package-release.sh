@@ -69,6 +69,7 @@ required_files=(
   docs/troubleshooting.md
   docs/support-agent-pilot.md
   docs/github-ingestion.md
+  docs/hermes-upstream-proposal.md
   docs/memory-provider.md
   scripts/support-agent-pilot.sh
   scripts/configure-support-profile.sh
@@ -125,7 +126,8 @@ cp "$project_dir/evals/support-retrieval.jsonl" "$project_dir/evals/support-agen
 cp "$project_dir/docs/knowledge-contract.md" "$project_dir/docs/security.md" \
   "$project_dir/docs/operations.md" "$project_dir/docs/quickstart.md" \
   "$project_dir/docs/troubleshooting.md" "$project_dir/docs/support-agent-pilot.md" \
-  "$project_dir/docs/github-ingestion.md" "$project_dir/docs/memory-provider.md" "$package_root/docs/"
+  "$project_dir/docs/github-ingestion.md" "$project_dir/docs/hermes-upstream-proposal.md" \
+  "$project_dir/docs/memory-provider.md" "$package_root/docs/"
 cp "$project_dir/scripts/support-agent-pilot.sh" "$project_dir/scripts/configure-support-profile.sh" \
   "$project_dir/scripts/launch-support-dashboard.sh" "$project_dir/scripts/import-github-docs.sh" \
   "$project_dir/scripts/memory-smoke.sh" \
@@ -166,7 +168,7 @@ jq -n \
     bin/antfly-hermes-setup "bin/$native_library" evals/antfly-github-conversations.jsonl \
     evals/antfly-github-docs.jsonl evals/support-agent-conversations.jsonl \
     evals/support-retrieval.jsonl examples/support-corpus-manifest.json examples/support-governed.jsonl \
-    docs/github-ingestion.md docs/knowledge-contract.md docs/memory-provider.md \
+    docs/github-ingestion.md docs/hermes-upstream-proposal.md docs/knowledge-contract.md docs/memory-provider.md \
     docs/operations.md docs/quickstart.md docs/security.md docs/support-agent-pilot.md \
     docs/troubleshooting.md scripts/configure-support-profile.sh scripts/import-github-docs.sh scripts/lib/hermes-plugin.sh \
     scripts/memory-smoke.sh \

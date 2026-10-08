@@ -29,4 +29,14 @@ printf '%s' '{"method":"forget_text","text":"The user prefers concise weekly sta
   | "$runtime" --db "$db" \
   | jq -e --arg id "$memory_id" '.ok and .result.deleted and .result.id == $id' >/dev/null
 
+printf '%s' '{"method":"remember","text":"Keeps a feline companion","kind":"fact","scope":"user","context":{"user_id":"alice"},"embedding":[1,0]}' \
+  | "$runtime" --db "$db" \
+  | jq -e '.ok' >/dev/null
+printf '%s' '{"method":"remember","text":"Schedules quarterly finance reviews","kind":"fact","scope":"user","context":{"user_id":"alice"},"embedding":[0,1]}' \
+  | "$runtime" --db "$db" \
+  | jq -e '.ok' >/dev/null
+printf '%s' '{"method":"search","query":"household pet","limit":2,"context":{"user_id":"alice"},"embedding":[0.99,0.01]}' \
+  | "$runtime" --db "$db" \
+  | jq -e '.ok and .result.hits[0].text == "Keeps a feline companion"' >/dev/null
+
 echo "Antfly memory runtime smoke passed"

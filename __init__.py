@@ -5,12 +5,17 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import math
 import os
 import queue
+import re
 import subprocess
 import threading
+import urllib.error
+import urllib.request
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 from agent.memory_provider import (
     PRE_COMPRESS_CHECKPOINT_API_VERSION,
@@ -38,6 +43,12 @@ class AntflyLiteMemoryProvider(MemoryProvider):
         self._auto_recall = True
         self._default_scope = "user"
         self._max_recall_results = 6
+        self._auto_extract_facts = True
+        self._semantic_recall = False
+        self._embedding_url = ""
+        self._embedding_model = ""
+        self._embedding_space = ""
+        self._embedding_timeout_seconds = 3.0
         self._last_recall_count = 0
         self._last_error = ""
         self._write_queue: "queue.Queue[Optional[dict]]" = queue.Queue()
@@ -70,6 +81,7 @@ class AntflyLiteMemoryProvider(MemoryProvider):
         }
         self._write_enabled = str(kwargs.get("agent_context") or "primary") == "primary"
         self._load_config(hermes_home / self.name / "config.json")
+        self._lock_embedding_space(data_dir / "embedding-space.json")
         self._call({"method": "status"}, timeout=10)
         if self._writer is None or not self._writer.is_alive():
             self._writer = spawn_context_thread(self._writer_loop, name="antfly-memory-writer")
@@ -88,10 +100,10 @@ class AntflyLiteMemoryProvider(MemoryProvider):
             return ""
         context = self._request_context(session_id=session_id)
         try:
-            result = self._call({
+            result = self._call(self._with_embedding({
                 "method": "search", "query": query, "limit": self._max_recall_results,
                 "context": context,
-            }, timeout=3)
+            }), timeout=max(3.0, self._embedding_timeout_seconds + 1.0))
         except Exception as exc:
             self._last_error = str(exc)
             logger.warning("Antfly memory prefetch failed: %s", exc)
@@ -143,6 +155,13 @@ class AntflyLiteMemoryProvider(MemoryProvider):
             "source": "completed_turn",
             "context": context,
         })
+        fact = self._fact_candidate(user_content)
+        if self._auto_extract_facts and fact:
+            self._enqueue({
+                "method": "remember", "kind": "auto_fact", "text": fact,
+                "scope": self._scope_for(context), "importance": 0.7,
+                "source": "completed_turn_fact", "context": context,
+            })
 
     def on_memory_write(
         self,
@@ -261,7 +280,16 @@ class AntflyLiteMemoryProvider(MemoryProvider):
         elif action != "status":
             return json.dumps({"error": "action must be remember, search, forget, or status"})
         try:
-            return json.dumps(self._call(request, timeout=10), ensure_ascii=False)
+            result = self._call(
+                self._with_embedding(request),
+                timeout=max(10.0, self._embedding_timeout_seconds + 1.0),
+            )
+            if action == "status":
+                result["semantic"] = {
+                    "enabled": self._semantic_recall,
+                    "model": self._embedding_model if self._semantic_recall else "",
+                }
+            return json.dumps(result, ensure_ascii=False)
         except Exception as exc:
             return json.dumps({"error": str(exc)}, ensure_ascii=False)
 
@@ -283,6 +311,27 @@ class AntflyLiteMemoryProvider(MemoryProvider):
                 "key": "default_scope", "description": "Default isolation boundary for new memories",
                 "choices": ["user", "workspace", "agent", "session", "profile"], "default": "user",
             },
+            {
+                "key": "auto_extract_facts", "description": "Capture safe declarative user facts separately",
+                "type": "boolean", "default": True,
+            },
+            {
+                "key": "semantic_recall", "description": "Enable hybrid lexical and vector recall",
+                "type": "boolean", "default": False,
+            },
+            {
+                "key": "embedding_url", "description": "OpenAI-compatible Antfly Inference embeddings URL",
+                "default": "",
+            },
+            {"key": "embedding_model", "description": "Embedding model identifier", "default": ""},
+            {
+                "key": "embedding_space", "description": "Stable vector-space identifier (defaults to model)",
+                "default": "",
+            },
+            {
+                "key": "embedding_timeout_seconds", "description": "Embedding request timeout",
+                "type": "number", "minimum": 0.5, "maximum": 30, "default": 3,
+            },
         ]
 
     def save_config(self, values: Dict[str, Any], hermes_home: str) -> None:
@@ -297,9 +346,18 @@ class AntflyLiteMemoryProvider(MemoryProvider):
             "auto_recall": self._as_bool(values.get("auto_recall", True), True),
             "max_recall_results": max(1, min(20, int(values.get("max_recall_results", 6)))),
             "default_scope": str(values.get("default_scope") or "user"),
+            "auto_extract_facts": self._as_bool(values.get("auto_extract_facts", True), True),
+            "semantic_recall": self._as_bool(values.get("semantic_recall", False), False),
+            "embedding_url": str(values.get("embedding_url") or "").strip(),
+            "embedding_model": str(values.get("embedding_model") or "").strip(),
+            "embedding_space": str(values.get("embedding_space") or "").strip(),
+            "embedding_timeout_seconds": max(
+                0.5, min(30.0, float(values.get("embedding_timeout_seconds", 3)))
+            ),
         }
         if cleaned["default_scope"] not in {"profile", "agent", "user", "workspace", "session"}:
             raise ValueError("default_scope is invalid")
+        self._validate_embedding_config(cleaned)
         config_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
         temp.write_text(json.dumps(cleaned, indent=2) + "\n", encoding="utf-8")
         os.chmod(temp, 0o600)
@@ -323,8 +381,17 @@ class AntflyLiteMemoryProvider(MemoryProvider):
         self._auto_capture = self._as_bool(config.get("auto_capture", True), True)
         self._auto_recall = self._as_bool(config.get("auto_recall", True), True)
         self._max_recall_results = max(1, min(20, int(config.get("max_recall_results", 6))))
+        self._auto_extract_facts = self._as_bool(config.get("auto_extract_facts", True), True)
+        self._semantic_recall = self._as_bool(config.get("semantic_recall", False), False)
+        self._embedding_url = str(config.get("embedding_url") or "").strip()
+        self._embedding_model = str(config.get("embedding_model") or "").strip()
+        self._embedding_space = str(config.get("embedding_space") or "").strip()
+        self._embedding_timeout_seconds = max(
+            0.5, min(30.0, float(config.get("embedding_timeout_seconds", 3)))
+        )
         configured_scope = str(config.get("default_scope") or "user")
         self._default_scope = configured_scope if configured_scope in {"profile", "agent", "user", "workspace", "session"} else "user"
+        self._validate_embedding_config(config)
 
     @staticmethod
     def _as_bool(value: Any, default: bool) -> bool:
@@ -351,6 +418,101 @@ class AntflyLiteMemoryProvider(MemoryProvider):
             if context.get(field):
                 return scope
         return "profile"
+
+    def _with_embedding(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        if not self._semantic_recall or request.get("method") not in {"remember", "search"}:
+            return request
+        source_text = str(request.get("text") or request.get("query") or "").strip()
+        if not source_text:
+            return request
+        enriched = dict(request)
+        try:
+            enriched["embedding"] = self._embed(source_text)
+        except Exception as exc:
+            self._last_error = str(exc)
+            logger.warning("Antfly semantic memory fell back to lexical retrieval: %s", exc)
+        return enriched
+
+    def _embed(self, source_text: str) -> List[float]:
+        payload = json.dumps({"model": self._embedding_model, "input": source_text}).encode("utf-8")
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        api_key = os.environ.get("ANTFLY_INFERENCE_API_KEY", "").strip()
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
+        request = urllib.request.Request(self._embedding_url, data=payload, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(request, timeout=self._embedding_timeout_seconds) as response:
+                raw = response.read(8 * 1024 * 1024 + 1)
+        except (OSError, urllib.error.URLError) as exc:
+            raise RuntimeError("embedding endpoint unavailable") from exc
+        if len(raw) > 8 * 1024 * 1024:
+            raise RuntimeError("embedding response exceeded 8 MiB")
+        try:
+            body = json.loads(raw)
+            vector = (body.get("data") or [{}])[0].get("embedding")
+            if vector is None:
+                vectors = body.get("embeddings") or []
+                vector = vectors[0] if vectors else None
+            result = [float(value) for value in vector]
+        except (AttributeError, IndexError, TypeError, ValueError) as exc:
+            raise RuntimeError("embedding endpoint returned an invalid response") from exc
+        if not 2 <= len(result) <= 4096 or any(not math.isfinite(value) for value in result):
+            raise RuntimeError("embedding endpoint returned an invalid vector")
+        return result
+
+    def _validate_embedding_config(self, config: Dict[str, Any]) -> None:
+        enabled = self._as_bool(config.get("semantic_recall", self._semantic_recall), self._semantic_recall)
+        if not enabled:
+            return
+        url = str(config.get("embedding_url") or self._embedding_url or "").strip()
+        model = str(config.get("embedding_model") or self._embedding_model or "").strip()
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise ValueError("semantic_recall requires an http(s) embedding_url")
+        if not model:
+            raise ValueError("semantic_recall requires embedding_model")
+
+    def _lock_embedding_space(self, marker_path: Path) -> None:
+        if not self._semantic_recall:
+            return
+        identity = self._embedding_space or self._embedding_model
+        fingerprint = hashlib.sha256(identity.encode("utf-8")).hexdigest()
+        if marker_path.is_file():
+            try:
+                existing = json.loads(marker_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as exc:
+                raise RuntimeError("Antfly memory embedding-space marker is invalid") from exc
+            if existing.get("fingerprint") != fingerprint:
+                raise RuntimeError(
+                    "embedding vector space changed; migrate or start a new memory.aflite before enabling semantic recall"
+                )
+            return
+        temporary = marker_path.with_name(".embedding-space.json.tmp")
+        temporary.write_text(json.dumps({
+            "schema_version": 1,
+            "space": identity,
+            "model": self._embedding_model,
+            "fingerprint": fingerprint,
+        }, indent=2) + "\n", encoding="utf-8")
+        os.chmod(temporary, 0o600)
+        os.replace(temporary, marker_path)
+
+    @staticmethod
+    def _fact_candidate(user_content: str) -> str:
+        normalized = " ".join(user_content.split())
+        lowered = normalized.lower()
+        if not 8 <= len(normalized) <= 500 or "http://" in lowered or "https://" in lowered:
+            return ""
+        if re.search(r"\b(ignore|disregard|system prompt|developer message|instruction)\b", normalized, re.IGNORECASE):
+            return ""
+        patterns = (
+            r"^(?:please remember (?:that )?)?(my|our)\s+.+?\s+(?:is|are)\s+.+[.!]?$",
+            r"^I\s+(?:prefer|use|work|manage|own|need|like|want)\s+.+[.!]?$",
+            r"^We\s+(?:prefer|use|work|manage|own|need)\s+.+[.!]?$",
+        )
+        if any(re.match(pattern, normalized, re.IGNORECASE) for pattern in patterns):
+            return f"User fact: {normalized}"
+        return ""
 
     def _call(self, request: Dict[str, Any], *, timeout: float) -> Dict[str, Any]:
         if self._db_path is None:
@@ -383,7 +545,10 @@ class AntflyLiteMemoryProvider(MemoryProvider):
             try:
                 if request is None:
                     return
-                self._call(request, timeout=10)
+                self._call(
+                    self._with_embedding(request),
+                    timeout=max(10.0, self._embedding_timeout_seconds + 1.0),
+                )
             except Exception as exc:
                 self._last_error = str(exc)
                 logger.warning("Antfly memory write failed: %s", exc)
