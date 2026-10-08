@@ -38,4 +38,11 @@ printf '%s\n' \
   | bin/antfly-hermes-mcp --db data/knowledge.aflite > data/mcp.jsonl
 grep -q 'support:password-reset' data/mcp.jsonl
 
+printf '%s' '{"method":"remember","text":"The user prefers concise support updates","kind":"preference","scope":"user","context":{"agent_id":"support","user_id":"linux-smoke","session_id":"s1"}}' \
+  | bin/antfly-hermes-memory --db data/memory.aflite \
+  | grep -q '"ok":true'
+printf '%s' '{"method":"search","query":"concise support updates","context":{"agent_id":"support","user_id":"linux-smoke","session_id":"s2"}}' \
+  | bin/antfly-hermes-memory --db data/memory.aflite \
+  | grep -q 'The user prefers concise support updates'
+
 echo "Linux release package smoke passed: $package_name"

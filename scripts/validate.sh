@@ -5,6 +5,7 @@ project_dir=$(cd "$(dirname "$0")/.." && pwd)
 cd "$project_dir"
 
 jq empty plugin.json mcp.json examples/support-corpus-manifest.json
+python3 -m py_compile __init__.py config_schema.py scripts/provider-smoke.py
 test "$(jq -r '.name' plugin.json)" = "antfly-hermes-lite"
 test "$(jq -r '.mcpServers["antfly-knowledge"].type' mcp.json)" = "stdio"
 test "$(jq -r '.mcpServers["antfly-knowledge"].command' mcp.json)" = "./bin/antfly-hermes-mcp"
@@ -37,6 +38,7 @@ test -x scripts/import-github-docs.sh
 test -x scripts/ci-release.sh
 test -x scripts/fetch-antfly-native.sh
 test -x scripts/linux-package-smoke.sh
+test -x scripts/memory-smoke.sh
 
 if grep -RInE 'antflydb_[A-Za-z0-9_-]+' . \
   --exclude-dir=.git --exclude-dir=.antfly-native --exclude-dir=bin --exclude-dir=dist; then

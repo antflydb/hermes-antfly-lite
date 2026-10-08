@@ -1,9 +1,9 @@
-# Antfly Lite Knowledge Connector for Hermes
+# Antfly Lite Knowledge and Memory for Hermes
 
 Production-oriented, local-first knowledge connector for Hermes. It packages a
-narrow stdio MCP server, stores the knowledge base in one Antfly Lite `.aflite`
-database, and keeps corpus provenance and qualification settings in a validated
-sidecar manifest.
+narrow stdio MCP server for governed knowledge plus a native Hermes memory
+provider. Knowledge and profile-local long-term memory use separate Antfly Lite
+`.aflite` databases so corpus promotion never mutates conversational memory.
 
 This repository is a pre-release Support golden path. The Go binding is pinned
 to the Antfly v0.2.1 source commit with a verified module checksum. Native
@@ -27,7 +27,13 @@ Once installed and authenticated, launch its local web UI with
 To build a governed Antfly Lite knowledge base from commit-pinned GitHub files,
 see [GitHub documentation ingestion](docs/github-ingestion.md).
 
-## Model-visible tools
+To make Antfly Lite the active context and memory backend for a Hermes profile,
+see the [native memory provider guide](docs/memory-provider.md). The initial
+provider supplies scoped lexical recall, automatic completed-turn capture,
+curated-memory mirroring, and pre-compression checkpoints without an API key,
+model download, Docker, or a separate service.
+
+## Model-visible knowledge tools
 
 - `search_knowledge`: full-text search over approved knowledge chunks.
 - `get_source`: retrieve one stored source by its stable identifier.
@@ -36,6 +42,10 @@ see [GitHub documentation ingestion](docs/github-ingestion.md).
 All three tools are read-only. Database creation, ingestion, indexing, backup,
 restore, and promotion are human-operated commands and are never exposed to the
 model.
+
+The native provider also exposes `antfly_memory` with `remember`, `search`,
+`forget`, and `status` actions. Automatic recall injects matched memories as
+background evidence before each turn.
 
 ## Phase 0 local build
 

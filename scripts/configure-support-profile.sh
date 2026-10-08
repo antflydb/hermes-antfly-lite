@@ -24,7 +24,9 @@ support_skill=${HERMES_SUPPORT_SKILL:-"$skill_namespace:antfly-support"}
 "$hermes_bin" -p "$hermes_profile" config set model.provider "$provider" >/dev/null
 "$hermes_bin" -p "$hermes_profile" config set model.default "$model" >/dev/null
 "$hermes_bin" -p "$hermes_profile" config set skills.auto_load "[\"$support_skill\"]" >/dev/null
-"$hermes_bin" -p "$hermes_profile" config set platform_toolsets.cli '["antfly-knowledge"]' >/dev/null
+"$hermes_bin" -p "$hermes_profile" config set memory.provider antfly-hermes-lite >/dev/null
+"$hermes_bin" -p "$hermes_profile" config set platform_toolsets.cli \
+  '["antfly-knowledge","memory","skills"]' >/dev/null
 "$hermes_bin" -p "$hermes_profile" config set agent.max_turns 8 >/dev/null
 "$hermes_bin" -p "$hermes_profile" config check >/dev/null
 

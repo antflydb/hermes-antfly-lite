@@ -12,10 +12,12 @@ enable it:
 
 ```bash
 cd ~/.hermes/plugins
-tar -xzf ~/Downloads/antfly-hermes-lite-0.1.0-PLATFORM.tar.gz
-mv antfly-hermes-lite-0.1.0-PLATFORM antfly-hermes-lite
+tar -xzf ~/Downloads/antfly-hermes-lite-0.2.0-PLATFORM.tar.gz
+mv antfly-hermes-lite-0.2.0-PLATFORM antfly-hermes-lite
 hermes plugins validate ~/.hermes/plugins/antfly-hermes-lite
 hermes plugins enable antfly-hermes-lite
+hermes config set memory.provider antfly-hermes-lite
+hermes memory status
 ```
 
 The connector stores data under Hermes' stable `${PLUGIN_DATA}` namespace, not
@@ -41,6 +43,11 @@ plugin/MCP diagnostics, then create the first Support corpus and its manifest:
 
 Restart the Hermes session after enabling the plugin. Ask a known-answer Support
 question and confirm that the response cites an approved source URL.
+
+Antfly Lite long-term memory is now active for the profile. It automatically
+recalls relevant memories before a turn, records completed primary-agent turns,
+and mirrors curated `MEMORY.md` and `USER.md` writes. See
+[Memory provider](memory-provider.md) for scope, configuration, and limitations.
 
 The manifest is installed as `knowledge.manifest.json` beside the database.
 `knowledge_status` reports its corpus identity and provenance, while the pilot

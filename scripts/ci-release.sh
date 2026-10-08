@@ -31,6 +31,8 @@ ANTFLY_SOURCE_DIR="$antfly_dir" ANTFLY_NATIVE_LIB_DIR="${ANTFLY_NATIVE_LIB_DIR:-
 "$project_dir/scripts/concurrency-smoke.sh"
 "$project_dir/scripts/failure-smoke.sh"
 "$project_dir/scripts/doctor-smoke.sh"
+"$project_dir/scripts/memory-smoke.sh"
+python3 "$project_dir/scripts/provider-smoke.py"
 "$project_dir/scripts/support-eval.sh"
 "$project_dir/scripts/package-release.sh"
 "$project_dir/scripts/package-smoke.sh"

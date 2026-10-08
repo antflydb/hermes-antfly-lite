@@ -37,7 +37,12 @@ test -x "$package_root/scripts/support-agent-pilot.sh"
 test -x "$package_root/scripts/configure-support-profile.sh"
 test -x "$package_root/scripts/launch-support-dashboard.sh"
 test -x "$package_root/scripts/import-github-docs.sh"
+test -x "$package_root/scripts/memory-smoke.sh"
 test -x "$package_root/bin/antfly-hermes-github"
+test -x "$package_root/bin/antfly-hermes-memory"
+python3 -m py_compile "$package_root/__init__.py"
+python3 -m py_compile "$package_root/config_schema.py"
+python3 "$package_root/scripts/provider-smoke.py" --plugin-root "$package_root"
 jq -ce . "$package_root/evals/support-agent-conversations.jsonl" >/dev/null
 jq -ce . "$package_root/evals/antfly-github-conversations.jsonl" >/dev/null
 jq -ce . "$package_root/evals/antfly-github-docs.jsonl" >/dev/null
@@ -49,6 +54,17 @@ if [[ "$version_output" != *"version=$version"* || "$version_output" != *"target
   echo "error: unexpected packaged build identity: $version_output" >&2
   exit 1
 fi
+
+memory_db="$package_test_dir/memory/memory.aflite"
+printf '%s' '{"method":"remember","text":"The user prefers concise weekly status reports","kind":"preference","scope":"user","importance":0.9,"context":{"agent_id":"support","user_id":"package-user","session_id":"s1"}}' \
+  | "$package_root/bin/antfly-hermes-memory" --db "$memory_db" \
+  | jq -e '.ok and .result.scope == "user"' >/dev/null
+printf '%s' '{"method":"search","query":"concise weekly status","limit":6,"context":{"agent_id":"support","user_id":"package-user","session_id":"s2"}}' \
+  | "$package_root/bin/antfly-hermes-memory" --db "$memory_db" \
+  | jq -e '.ok and (.result.hits | length) == 1' >/dev/null
+printf '%s' '{"method":"search","query":"concise weekly status","limit":6,"context":{"agent_id":"support","user_id":"different-user","session_id":"s3"}}' \
+  | "$package_root/bin/antfly-hermes-memory" --db "$memory_db" \
+  | jq -e '.ok and (.result.hits | length) == 0' >/dev/null
 
 data_dir="$package_test_dir/data"
 mkdir -p "$data_dir"

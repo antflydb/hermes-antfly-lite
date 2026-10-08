@@ -32,6 +32,7 @@ mkdir -p "$project_dir/bin"
   CGO_LDFLAGS="$cgo_linker_flags" go build -trimpath -buildvcs=false -ldflags "$ldflags" -o bin/antfly-hermes-setup ./cmd/antfly-hermes-ingest
   CGO_LDFLAGS="$cgo_linker_flags" go build -trimpath -buildvcs=false -ldflags "$ldflags" -o bin/antfly-hermes-maintain ./cmd/antfly-hermes-maintain
   CGO_LDFLAGS="$cgo_linker_flags" go build -trimpath -buildvcs=false -ldflags "$ldflags" -o bin/antfly-hermes-eval ./cmd/antfly-hermes-eval
+  CGO_LDFLAGS="$cgo_linker_flags" go build -trimpath -buildvcs=false -ldflags "$ldflags" -o bin/antfly-hermes-memory ./cmd/antfly-hermes-memory
   go build -trimpath -buildvcs=false -ldflags "$ldflags" -o bin/antfly-hermes-github ./cmd/antfly-hermes-github
   CGO_LDFLAGS="$cgo_linker_flags" go build -trimpath -buildvcs=false -ldflags "$ldflags" -o bin/phase0-lockprobe ./cmd/phase0-lockprobe
 )

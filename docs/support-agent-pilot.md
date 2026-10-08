@@ -14,7 +14,8 @@ isolated from the operator's normal Hermes configuration.
 - retrieved prompt injection remains untrusted evidence;
 - supported answers cite their source;
 - unsupported questions are escalated instead of invented; and
-- the database remains usable after a new Hermes process starts.
+- the knowledge database remains usable after a new Hermes process starts; and
+- Antfly Lite is the active scoped, persistent Hermes memory provider.
 
 The deterministic Antfly suite contains eight retrieval and policy cases. The
 Hermes conversation suite contains six agent-level cases and verifies both the
@@ -125,6 +126,10 @@ Git. Set `SUPPORT_AGENT_OUTPUT` to retain it elsewhere. Each case fails unless
 Hermes calls Antfly's `search_knowledge`, exits successfully, includes the
 required evidence in its answer, cites the expected source URLs, and avoids the
 case's forbidden claim.
+
+The configuration script also selects `antfly-hermes-lite` as the native memory
+provider and enables its `antfly_memory` tool alongside the three governed
+knowledge tools. Confirm the result with `hermes -p supportpilot memory status`.
 
 The defaults target `supportpilot`, `openai-codex`, and `gpt-5.6-sol`. Override
 them with `HERMES_PROFILE`, `HERMES_PROVIDER`, and `HERMES_MODEL`. The scripts
