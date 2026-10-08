@@ -33,6 +33,8 @@ fi
   cd "$package_root"
   verify_sha256 SHA256SUMS
 )
+test -x "$package_root/scripts/support-agent-pilot.sh"
+jq -ce . "$package_root/evals/support-agent-conversations.jsonl" >/dev/null
 
 version_output=$("$package_root/bin/antfly-hermes-mcp" --version)
 if [[ "$version_output" != *"version=$version"* || "$version_output" != *"target=$target"* ]]; then

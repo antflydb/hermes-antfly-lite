@@ -54,11 +54,14 @@ required_files=(
   skills/antfly-support/SKILL.md
   examples/support-governed.jsonl
   evals/support-retrieval.jsonl
+  evals/support-agent-conversations.jsonl
   docs/knowledge-contract.md
   docs/security.md
   docs/operations.md
   docs/quickstart.md
   docs/troubleshooting.md
+  docs/support-agent-pilot.md
+  scripts/support-agent-pilot.sh
 )
 for relative_path in "${required_files[@]}"; do
   if [[ ! -f "$project_dir/$relative_path" ]]; then
@@ -93,22 +96,24 @@ package_tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/antfly-hermes-package.XXXXXX")
 trap 'rm -rf "$package_tmp_dir"' EXIT
 package_root="$package_tmp_dir/$package_name"
 mkdir -p "$package_root/bin" "$package_root/skills/antfly-support" "$package_root/examples" \
-  "$package_root/evals" "$package_root/docs" "$project_dir/dist"
+  "$package_root/evals" "$package_root/docs" "$package_root/scripts" "$project_dir/dist"
 
 cp "$project_dir/plugin.json" "$project_dir/mcp.json" "$project_dir/README.md" \
   "$project_dir/LICENSE" "$project_dir/SOURCE_PROVENANCE.md" "$project_dir/SECURITY.md" "$package_root/"
 cp "$project_dir/skills/antfly-support/SKILL.md" "$package_root/skills/antfly-support/"
 cp "$project_dir/examples/support-governed.jsonl" "$package_root/examples/"
-cp "$project_dir/evals/support-retrieval.jsonl" "$package_root/evals/"
+cp "$project_dir/evals/support-retrieval.jsonl" "$project_dir/evals/support-agent-conversations.jsonl" \
+  "$package_root/evals/"
 cp "$project_dir/docs/knowledge-contract.md" "$project_dir/docs/security.md" \
   "$project_dir/docs/operations.md" "$project_dir/docs/quickstart.md" \
-  "$project_dir/docs/troubleshooting.md" "$package_root/docs/"
+  "$project_dir/docs/troubleshooting.md" "$project_dir/docs/support-agent-pilot.md" "$package_root/docs/"
+cp "$project_dir/scripts/support-agent-pilot.sh" "$package_root/scripts/"
 cp "$project_dir/bin/antfly-hermes-mcp" "$project_dir/bin/antfly-hermes-ingest" \
   "$project_dir/bin/antfly-hermes-setup" "$project_dir/bin/antfly-hermes-maintain" \
   "$project_dir/bin/antfly-hermes-eval" "$project_dir/bin/$native_library" "$package_root/bin/"
 chmod 0755 "$package_root/bin/antfly-hermes-mcp" "$package_root/bin/antfly-hermes-ingest" \
   "$package_root/bin/antfly-hermes-setup" "$package_root/bin/antfly-hermes-maintain" \
-  "$package_root/bin/antfly-hermes-eval"
+  "$package_root/bin/antfly-hermes-eval" "$package_root/scripts/support-agent-pilot.sh"
 
 connector_commit=$(git -C "$project_dir" rev-parse --verify HEAD 2>/dev/null || printf 'uncommitted')
 antfly_lite_version=$(cd "$project_dir" && go list -m -f '{{.Version}}' github.com/antflydb/antfly/go/pkg/antflylite)
@@ -128,9 +133,10 @@ jq -n \
   sha256 \
     LICENSE README.md SECURITY.md SOURCE_PROVENANCE.md build-metadata.json mcp.json plugin.json \
     bin/antfly-hermes-eval bin/antfly-hermes-ingest bin/antfly-hermes-maintain bin/antfly-hermes-mcp \
-    bin/antfly-hermes-setup "bin/$native_library" evals/support-retrieval.jsonl examples/support-governed.jsonl \
-    docs/knowledge-contract.md docs/operations.md docs/quickstart.md docs/security.md docs/troubleshooting.md \
-    skills/antfly-support/SKILL.md > SHA256SUMS
+    bin/antfly-hermes-setup "bin/$native_library" evals/support-agent-conversations.jsonl \
+    evals/support-retrieval.jsonl examples/support-governed.jsonl docs/knowledge-contract.md \
+    docs/operations.md docs/quickstart.md docs/security.md docs/support-agent-pilot.md \
+    docs/troubleshooting.md scripts/support-agent-pilot.sh skills/antfly-support/SKILL.md > SHA256SUMS
 )
 
 COPYFILE_DISABLE=1 tar -czf "$artifact" -C "$package_tmp_dir" "$package_name"

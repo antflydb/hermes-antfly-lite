@@ -17,6 +17,10 @@ Start with the [quickstart](docs/quickstart.md). Native runtimes are distributed
 as platform-specific release archives; a source checkout alone is not an
 installed plugin.
 
+To exercise the complete Hermes Support-agent flow, including an isolated
+profile, governed corpus, deterministic retrieval evaluation, and cited model
+conversations, follow the [Support-agent pilot](docs/support-agent-pilot.md).
+
 ## Model-visible tools
 
 - `search_knowledge`: full-text search over approved knowledge chunks.
