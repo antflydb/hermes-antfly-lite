@@ -25,6 +25,8 @@ test -x scripts/package-smoke.sh
 test -x scripts/doctor-smoke.sh
 test -x scripts/support-eval.sh
 test -x scripts/support-agent-pilot.sh
+test -x scripts/configure-support-profile.sh
+test -x scripts/launch-support-dashboard.sh
 test -x scripts/ci-release.sh
 test -x scripts/fetch-antfly-native.sh
 test -x scripts/linux-package-smoke.sh

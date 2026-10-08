@@ -34,6 +34,8 @@ fi
   verify_sha256 SHA256SUMS
 )
 test -x "$package_root/scripts/support-agent-pilot.sh"
+test -x "$package_root/scripts/configure-support-profile.sh"
+test -x "$package_root/scripts/launch-support-dashboard.sh"
 jq -ce . "$package_root/evals/support-agent-conversations.jsonl" >/dev/null
 
 version_output=$("$package_root/bin/antfly-hermes-mcp" --version)

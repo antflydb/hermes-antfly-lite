@@ -20,6 +20,8 @@ installed plugin.
 To exercise the complete Hermes Support-agent flow, including an isolated
 profile, governed corpus, deterministic retrieval evaluation, and cited model
 conversations, follow the [Support-agent pilot](docs/support-agent-pilot.md).
+Once installed and authenticated, launch its local web UI with
+`scripts/launch-support-dashboard.sh`.
 
 ## Model-visible tools
 

@@ -53,6 +53,14 @@ not copied from another profile:
 hermes -p supportpilot auth add openai-codex --type oauth
 ```
 
+Configure the profile so browser, TUI, and CLI sessions automatically use the
+Support model, skill, and Antfly knowledge toolset:
+
+```bash
+HERMES_BIN="$HOME/.local/bin/hermes" \
+  scripts/configure-support-profile.sh
+```
+
 ## Build and verify the knowledge base
 
 From this repository checkout:
@@ -87,6 +95,27 @@ Run all conversational acceptance cases:
 HERMES_BIN="$HOME/.local/bin/hermes" \
   scripts/support-agent-pilot.sh conversations
 ```
+
+## Open the web dashboard
+
+Start a profile-isolated dashboard with one command:
+
+```bash
+HERMES_BIN="$HOME/.local/bin/hermes" \
+  scripts/launch-support-dashboard.sh
+```
+
+The launcher reapplies the focused profile defaults, verifies the Antfly
+database and deterministic retrieval suite, selects an available loopback port,
+and opens the dashboard in the default browser. The terminal also prints the
+selected URL. Set `HERMES_DASHBOARD_PORT=9119` (or another port) when a stable
+address is required. The launcher remains attached to the dashboard process;
+press Control-C to stop it.
+
+For automation or troubleshooting, `SUPPORT_DASHBOARD_SKIP_CONFIG=1` skips the
+idempotent profile configuration and `SUPPORT_DASHBOARD_SKIP_VERIFY=1` skips
+the preflight knowledge check. Additional Hermes dashboard flags, such as
+`--no-open`, can be appended to the command.
 
 The JSON report is written to
 `pilot-results/support-agent-conversations.json` by default and is ignored by
