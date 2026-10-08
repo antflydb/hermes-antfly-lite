@@ -17,9 +17,13 @@ preserving Hermes' SQLite session ledger and built-in Markdown compatibility.
 3. Qualify automatic recall, completed-turn synchronization, curated-memory
    mirroring, pre-compression checkpoints, scoped deletion, backups, and plugin
    host isolation in Hermes' provider conformance suite.
-4. Measure install conversion, recall quality, latency, and provider failures
+4. Add an Antfly instance URL backend for hosted Hermes while preserving the
+   same provider contract and keeping local Lite as the zero-key default.
+5. Demonstrate explicit, verified promotion from a local Lite profile to the
+   hosted Antfly backend without changing logical record identities or scopes.
+6. Measure install conversion, recall quality, latency, and provider failures
    before discussing a bundled or default-provider change.
-5. Only after adoption, propose Antfly Lite as the default new-profile context
+7. Only after adoption, propose Antfly Lite as the default new-profile context
    backend. Existing profiles remain opt-in and migration remains reversible.
 
 ## Maintainer-facing boundary
@@ -29,6 +33,13 @@ conversation schema, or require a service. The plugin owns one profile-local
 `.aflite` memory file and uses the existing `MemoryProvider` lifecycle. Its MCP
 server independently exposes governed, cited knowledge bases, so maintainers can
 review memory and knowledge integration as separate capabilities.
+
+Hosted Hermes support is a follow-up milestone rather than an expansion of the
+initial catalog PR. It will accept an Antfly instance URL and profile-scoped
+secret, use separate logical namespaces for memory and knowledge, and run the
+same behavior-conformance suite as Lite. Cloud outages must never create an
+implicit local fallback database or dual-write split brain. See
+[the roadmap](roadmap.md) for the configuration and acceptance criteria.
 
 ## Evidence to include
 

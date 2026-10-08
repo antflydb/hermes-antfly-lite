@@ -18,6 +18,10 @@ Start with the [quickstart](docs/quickstart.md). Native runtimes are distributed
 as platform-specific release archives; a source checkout alone is not an
 installed plugin.
 
+The [product roadmap](docs/roadmap.md) covers the Apache-2.0 release gate,
+Hermes catalog adoption, hosted Hermes support through an Antfly instance URL,
+Lite-to-Cloud promotion, and the longer-term context-system work.
+
 To exercise the complete Hermes Support-agent flow, including an isolated
 profile, governed corpus, deterministic retrieval evaluation, and cited model
 conversations, follow the [Support-agent pilot](docs/support-agent-pilot.md).
