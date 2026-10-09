@@ -1,9 +1,12 @@
-# Antfly Lite Knowledge and Memory for Hermes
+# Hermes + Antfly
 
-Production-oriented, local-first knowledge connector for Hermes. It packages a
+Production-oriented context and memory integration for Hermes. Antfly Lite is
+the default embedded backend, while the integration identity is simply Antfly
+so the same provider can support shared Antfly Cloud instances. It packages a
 narrow stdio MCP server for governed knowledge plus a native Hermes memory
-provider. Knowledge and profile-local long-term memory use separate Antfly Lite
-`.aflite` databases so corpus promotion never mutates conversational memory.
+provider. In Lite mode, knowledge and profile-local long-term memory use
+separate `.aflite` databases so corpus promotion never mutates conversational
+memory.
 
 This repository is a pre-release Support golden path. The Go binding is pinned
 to the Antfly v0.2.1 source commit with a verified module checksum. Native
@@ -39,7 +42,7 @@ and pre-compression checkpoints. Its default lexical mode needs no API key,
 model download, Docker, or separate service.
 
 The repository also contains a universal, no-download Hermes catalog bundle in
-`catalog/antfly-hermes-lite`. It selects a checksummed runtime for macOS arm64,
+`catalog/hermes-antfly`. It selects a checksummed runtime for macOS arm64,
 Linux amd64, or Linux arm64 and expands only that payload into profile-local
 plugin data on first use.
 

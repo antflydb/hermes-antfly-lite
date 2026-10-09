@@ -2,18 +2,20 @@
 
 ## Objective
 
-Make Antfly Lite a first-class local context and memory backend for Hermes while
-preserving Hermes' SQLite session ledger and built-in Markdown compatibility.
+Make Antfly a first-class context and memory backend for Hermes, with embedded
+Lite as the default local mode and shared Antfly Cloud instances as the hosted
+mode, while preserving Hermes' SQLite session ledger and built-in Markdown
+compatibility.
 
 ## Proposed contribution sequence
 
-1. Publish `antfly-hermes-lite` in the Hermes plugin catalog as an installable
+1. Publish `hermes-antfly` in the Hermes plugin catalog as an installable
    `MemoryProvider` using the universal bundle in
-   `catalog/antfly-hermes-lite`. It carries immutable, checksummed macOS arm64,
+   `catalog/hermes-antfly`. It carries immutable, checksummed macOS arm64,
    Linux amd64, and Linux arm64 payloads and extracts only the current host's
    runtime into profile-local plugin data.
-2. Add Antfly Lite to `hermes memory setup` discovery and documentation as the
-   local-first hybrid-memory option.
+2. Add Antfly to `hermes memory setup` discovery and documentation as the
+   local-first hybrid-memory option, using Lite by default.
 3. Qualify automatic recall, completed-turn synchronization, curated-memory
    mirroring, pre-compression checkpoints, scoped deletion, backups, and plugin
    host isolation in Hermes' provider conformance suite.
@@ -23,8 +25,9 @@ preserving Hermes' SQLite session ledger and built-in Markdown compatibility.
    hosted Antfly backend without changing logical record identities or scopes.
 6. Measure install conversion, recall quality, latency, and provider failures
    before discussing a bundled or default-provider change.
-7. Only after adoption, propose Antfly Lite as the default new-profile context
-   backend. Existing profiles remain opt-in and migration remains reversible.
+7. Only after adoption, propose Antfly as the default new-profile context
+   backend. New local profiles begin in Lite mode; existing profiles remain
+   opt-in and migration remains reversible.
 
 ## Maintainer-facing boundary
 
@@ -63,10 +66,12 @@ catalog PR whose clone gate is guaranteed to fail.
 ## Suggested maintainer pitch
 
 Hermes currently separates session history, curated Markdown memory, and
-external memory providers. Antfly Lite adds an embedded local database that can
-serve scoped long-term memory and governed knowledge without replacing the
-session ledger. The working provider installs as a normal Hermes plugin, starts
-in zero-configuration lexical mode, and can opt into local hybrid retrieval via
-Antfly Inference. We would like to upstream the provider catalog entry and its
-conformance tests first, gather adoption evidence, and use that data to evaluate
-whether Antfly Lite should become the default context backend for new profiles.
+external memory providers. Antfly adds a context database that begins as an
+embedded Lite file and can later connect to a shared Cloud instance. It serves
+scoped long-term memory and governed knowledge without replacing the session
+ledger. The working provider installs as a normal Hermes plugin, starts in
+zero-configuration lexical Lite mode, and can opt into local hybrid retrieval
+via Antfly Inference. We would like to upstream the provider catalog entry and
+its conformance tests first, gather adoption evidence, and use that data to
+evaluate whether Antfly should become the default context backend for new
+profiles.

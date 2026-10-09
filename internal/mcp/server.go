@@ -9,11 +9,11 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/antflydb/hermes-antfly-lite/internal/buildinfo"
+	"github.com/antflydb/hermes-antfly/internal/buildinfo"
 )
 
 const (
-	serverName = "antfly-hermes-lite"
+	serverName = "hermes-antfly"
 	protocol   = "2025-06-18"
 	maxMessage = 16 << 20
 )

@@ -6,7 +6,7 @@ cd "$project_dir"
 
 jq empty plugin.json mcp.json examples/support-corpus-manifest.json
 python3 -m py_compile __init__.py config_schema.py scripts/provider-smoke.py
-test "$(jq -r '.name' plugin.json)" = "antfly-hermes-lite"
+test "$(jq -r '.name' plugin.json)" = "hermes-antfly"
 test "$(jq -r '.mcpServers["antfly-knowledge"].type' mcp.json)" = "stdio"
 test "$(jq -r '.mcpServers["antfly-knowledge"].command' mcp.json)" = "./bin/antfly-hermes-mcp"
 go mod verify
@@ -20,9 +20,9 @@ bash -n scripts/*.sh
 source scripts/lib/hermes-plugin.sh
 helper_test_dir=$(mktemp -d "${TMPDIR:-/tmp}/antfly-hermes-helper.XXXXXX")
 trap 'rm -rf "$helper_test_dir"' EXIT
-mkdir -p "$helper_test_dir/plugin-data/agent-plugin-antfly-hermes-lite-test1234"
+mkdir -p "$helper_test_dir/plugin-data/agent-plugin-hermes-antfly-test1234"
 test "$(ANTFLY_PLUGIN_DATA= antfly_resolve_plugin_data "$helper_test_dir")" = \
-  "$helper_test_dir/plugin-data/agent-plugin-antfly-hermes-lite-test1234"
+  "$helper_test_dir/plugin-data/agent-plugin-hermes-antfly-test1234"
 test -x scripts/build-local.sh
 test -x scripts/smoke.sh
 test -x scripts/concurrency-smoke.sh

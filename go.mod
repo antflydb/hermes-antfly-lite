@@ -1,4 +1,4 @@
-module github.com/antflydb/hermes-antfly-lite
+module github.com/antflydb/hermes-antfly
 
 go 1.26
 

@@ -8,7 +8,7 @@ version=$(jq -er '.version' "$project_dir/plugin.json")
 connector_commit=$(git -C "$project_dir" rev-parse --verify HEAD 2>/dev/null || printf 'uncommitted')
 antfly_lite_version=$(cd "$project_dir" && go list -m -f '{{.Version}}' github.com/antflydb/antfly/go/pkg/antflylite)
 target="$(go env GOOS)-$(go env GOARCH)"
-ldflags="-s -w -X github.com/antflydb/hermes-antfly-lite/internal/buildinfo.Version=$version -X github.com/antflydb/hermes-antfly-lite/internal/buildinfo.Commit=$connector_commit -X github.com/antflydb/hermes-antfly-lite/internal/buildinfo.AntflyLite=$antfly_lite_version -X github.com/antflydb/hermes-antfly-lite/internal/buildinfo.Target=$target"
+ldflags="-s -w -X github.com/antflydb/hermes-antfly/internal/buildinfo.Version=$version -X github.com/antflydb/hermes-antfly/internal/buildinfo.Commit=$connector_commit -X github.com/antflydb/hermes-antfly/internal/buildinfo.AntflyLite=$antfly_lite_version -X github.com/antflydb/hermes-antfly/internal/buildinfo.Target=$target"
 case "$(go env GOOS)" in
   darwin) runtime_linker_flags='-Wl,-rpath,@loader_path' ;;
   linux) runtime_linker_flags='-Wl,-rpath,$ORIGIN' ;;

@@ -10,9 +10,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/antflydb/hermes-antfly-lite/internal/buildinfo"
-	"github.com/antflydb/hermes-antfly-lite/internal/evidence"
-	"github.com/antflydb/hermes-antfly-lite/internal/lite"
+	"github.com/antflydb/hermes-antfly/internal/buildinfo"
+	"github.com/antflydb/hermes-antfly/internal/evidence"
+	"github.com/antflydb/hermes-antfly/internal/lite"
 )
 
 type evalCase struct {

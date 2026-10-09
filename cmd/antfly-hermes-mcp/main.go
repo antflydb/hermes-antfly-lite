@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/antflydb/hermes-antfly-lite/internal/buildinfo"
-	"github.com/antflydb/hermes-antfly-lite/internal/lite"
-	"github.com/antflydb/hermes-antfly-lite/internal/mcp"
+	"github.com/antflydb/hermes-antfly/internal/buildinfo"
+	"github.com/antflydb/hermes-antfly/internal/lite"
+	"github.com/antflydb/hermes-antfly/internal/mcp"
 )
 
 func main() {

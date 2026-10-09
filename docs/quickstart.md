@@ -7,16 +7,16 @@ Use the release archive matching the host:
 - `linux-arm64` for arm64 Linux.
 
 Verify the adjacent `.sha256` file before extraction. Extract the archive into
-the active Hermes plugin directory as `antfly-hermes-lite`, validate it, and
+the active Hermes plugin directory as `hermes-antfly`, validate it, and
 enable it:
 
 ```bash
 cd ~/.hermes/plugins
-tar -xzf ~/Downloads/antfly-hermes-lite-0.3.0-PLATFORM.tar.gz
-mv antfly-hermes-lite-0.3.0-PLATFORM antfly-hermes-lite
-hermes plugins validate ~/.hermes/plugins/antfly-hermes-lite
-hermes plugins enable antfly-hermes-lite
-hermes config set memory.provider antfly-hermes-lite
+tar -xzf ~/Downloads/hermes-antfly-0.3.0-PLATFORM.tar.gz
+mv hermes-antfly-0.3.0-PLATFORM hermes-antfly
+hermes plugins validate ~/.hermes/plugins/hermes-antfly
+hermes plugins enable hermes-antfly
+hermes config set memory.provider hermes-antfly
 hermes memory status
 ```
 
@@ -27,7 +27,7 @@ is hardcoded. For a manual setup, obtain the resolved path from Hermes'
 plugin/MCP diagnostics, then create the first Support corpus and its manifest:
 
 ```bash
-~/.hermes/plugins/antfly-hermes-lite/bin/antfly-hermes-setup \
+~/.hermes/plugins/hermes-antfly/bin/antfly-hermes-setup \
   --db PATH_TO_PLUGIN_DATA/knowledge.aflite \
   --input ./support-documents.jsonl \
   --backup PATH_TO_PLUGIN_DATA/knowledge.afb \
@@ -35,7 +35,7 @@ plugin/MCP diagnostics, then create the first Support corpus and its manifest:
   --audience support \
   --max-visibility internal
 
-~/.hermes/plugins/antfly-hermes-lite/bin/antfly-hermes-maintain doctor \
+~/.hermes/plugins/hermes-antfly/bin/antfly-hermes-maintain doctor \
   --db PATH_TO_PLUGIN_DATA/knowledge.aflite \
   --backup PATH_TO_PLUGIN_DATA/knowledge.afb \
   --query "a broad phrase expected in the corpus"
@@ -44,7 +44,8 @@ plugin/MCP diagnostics, then create the first Support corpus and its manifest:
 Restart the Hermes session after enabling the plugin. Ask a known-answer Support
 question and confirm that the response cites an approved source URL.
 
-Antfly Lite long-term memory is now active for the profile. It automatically
+Antfly long-term memory is now active for the profile using its default embedded
+Lite backend. It automatically
 recalls relevant memories before a turn, records completed primary-agent turns,
 and mirrors curated `MEMORY.md` and `USER.md` writes. See
 [Memory provider](memory-provider.md) for scope, configuration, and limitations.

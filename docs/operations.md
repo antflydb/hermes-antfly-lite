@@ -29,7 +29,7 @@ and exercises each target natively.
 
 The active memory provider keeps its separate profile-owned database at
 `$HERMES_HOME/antfly-memory/memory.aflite` and configuration at
-`$HERMES_HOME/antfly-hermes-lite/config.json`. Both use owner-only permissions.
+`$HERMES_HOME/hermes-antfly/config.json`. Both use owner-only permissions.
 Back up the entire Hermes profile to preserve memory state. Do not copy a live
 database while a memory write is running; stop Hermes or use the profile backup
 command so the provider lifecycle can drain queued writes first.

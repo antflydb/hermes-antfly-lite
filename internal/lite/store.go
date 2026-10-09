@@ -8,8 +8,8 @@ import (
 	"os"
 
 	"github.com/antflydb/antfly/go/pkg/antflylite"
-	"github.com/antflydb/hermes-antfly-lite/internal/corpus"
-	"github.com/antflydb/hermes-antfly-lite/internal/evidence"
+	"github.com/antflydb/hermes-antfly/internal/corpus"
+	"github.com/antflydb/hermes-antfly/internal/evidence"
 )
 
 const (

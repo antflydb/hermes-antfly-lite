@@ -13,7 +13,7 @@ antfly_resolve_plugin_data() {
     while IFS= read -r path; do
       matches+=("$path")
     done < <(find "$data_root" -mindepth 1 -maxdepth 1 -type d \
-      -name 'agent-plugin-antfly-hermes-lite-*' -print | sort)
+      -name 'agent-plugin-hermes-antfly-*' -print | sort)
   fi
   if [[ ${#matches[@]} -ne 1 ]]; then
     echo "error: expected exactly one Antfly plugin-data directory under $data_root; found ${#matches[@]}" >&2

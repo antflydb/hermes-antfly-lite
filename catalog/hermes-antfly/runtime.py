@@ -67,7 +67,7 @@ def _runtime_root(bundle: Path, target: str, version: str, expected: str) -> Pat
         fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
         if marker.is_file() and marker.read_text(encoding="utf-8").strip() == expected:
             return destination
-        archive = bundle / "payloads" / f"antfly-hermes-lite-{version}-{target}.tar.gz"
+        archive = bundle / "payloads" / f"hermes-antfly-{version}-{target}.tar.gz"
         if not archive.is_file() or _sha256(archive) != expected:
             raise RuntimeError(f"Antfly catalog runtime checksum failed for {target}")
         staging = Path(tempfile.mkdtemp(prefix=f".{version}-{target}.", dir=cache))
@@ -114,5 +114,5 @@ if __name__ == "__main__":
     try:
         raise SystemExit(main())
     except Exception as exc:
-        print(f"antfly-hermes-lite runtime error: {exc}", file=sys.stderr)
+        print(f"hermes-antfly runtime error: {exc}", file=sys.stderr)
         raise SystemExit(1)

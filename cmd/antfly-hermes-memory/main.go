@@ -8,8 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/antflydb/hermes-antfly-lite/internal/buildinfo"
-	"github.com/antflydb/hermes-antfly-lite/internal/memory"
+	"github.com/antflydb/hermes-antfly/internal/buildinfo"
+	"github.com/antflydb/hermes-antfly/internal/memory"
 )
 
 type response struct {

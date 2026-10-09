@@ -1,10 +1,11 @@
 # Native Hermes memory provider
 
-Antfly Lite can be selected as Hermes' profile-local long-term memory provider:
+Antfly can be selected as Hermes' long-term memory provider. The current
+release uses embedded Antfly Lite by default:
 
 ```bash
-hermes plugins enable antfly-hermes-lite
-hermes config set memory.provider antfly-hermes-lite
+hermes plugins enable hermes-antfly
+hermes config set memory.provider hermes-antfly
 hermes memory status
 ```
 
@@ -56,7 +57,7 @@ Use `hermes memory setup` or the Hermes dashboard to configure:
   fallback (default `3`).
 
 Configuration is stored at
-`$HERMES_HOME/antfly-hermes-lite/config.json` with owner-only permissions.
+`$HERMES_HOME/hermes-antfly/config.json` with owner-only permissions.
 
 ## Optional semantic recall
 
@@ -73,7 +74,7 @@ recall, run `hermes memory setup` or set these fields in the dashboard:
 }
 ```
 
-The provider supplies embeddings to Antfly Lite, which owns the dense-vector
+In Lite mode, the provider supplies embeddings to Antfly Lite, which owns the dense-vector
 index and native reciprocal-rank-fusion query. A configured endpoint failure is
 fail-open: memory writes and recall continue lexically. Remote endpoints can use
 the optional `ANTFLY_INFERENCE_API_KEY` profile secret. The response may use the
@@ -87,7 +88,8 @@ compatible vectors. The endpoint URL may change without changing the space.
 
 ## Current boundary
 
-Version 0.3 provides stable idempotent IDs, lexical and optional hybrid vector
+Version 0.3 provides the embedded Lite backend with stable idempotent IDs,
+lexical and optional hybrid vector
 retrieval, temporal and provenance metadata, scope enforcement, conservative
 fact capture, serialized background writes, and a one-file embedded database.
 Fact capture intentionally handles high-confidence declaration patterns rather

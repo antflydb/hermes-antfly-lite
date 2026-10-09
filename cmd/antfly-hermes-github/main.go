@@ -8,9 +8,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/antflydb/hermes-antfly-lite/internal/buildinfo"
-	"github.com/antflydb/hermes-antfly-lite/internal/corpus"
-	"github.com/antflydb/hermes-antfly-lite/internal/githubdocs"
+	"github.com/antflydb/hermes-antfly/internal/buildinfo"
+	"github.com/antflydb/hermes-antfly/internal/corpus"
+	"github.com/antflydb/hermes-antfly/internal/githubdocs"
 )
 
 type pathFlags []string

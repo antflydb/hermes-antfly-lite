@@ -35,11 +35,11 @@ hermes profile create supportpilot --no-alias --no-skills \
 hermes -p supportpilot plugins validate /path/to/extracted-release --json
 mkdir -p "$HOME/.hermes/profiles/supportpilot/plugins"
 cp -R /path/to/extracted-release \
-  "$HOME/.hermes/profiles/supportpilot/plugins/antfly-hermes-lite"
-hermes -p supportpilot plugins enable antfly-hermes-lite \
+  "$HOME/.hermes/profiles/supportpilot/plugins/hermes-antfly"
+hermes -p supportpilot plugins enable hermes-antfly \
   --no-allow-tool-override
 hermes -p supportpilot pm install --extra mcp
-hermes -p supportpilot plugins doctor antfly-hermes-lite --ci
+hermes -p supportpilot plugins doctor hermes-antfly --ci
 ```
 
 The destination must be absent before copying. Replacing an enabled installation
@@ -127,7 +127,7 @@ Hermes calls Antfly's `search_knowledge`, exits successfully, includes the
 required evidence in its answer, cites the expected source URLs, and avoids the
 case's forbidden claim.
 
-The configuration script also selects `antfly-hermes-lite` as the native memory
+The configuration script also selects `hermes-antfly` as the native memory
 provider and enables its `antfly_memory` tool alongside the three governed
 knowledge tools. Confirm the result with `hermes -p supportpilot memory status`.
 

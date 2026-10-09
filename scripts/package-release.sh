@@ -99,7 +99,7 @@ if [[ ! "$native_description" =~ $expected_arch ]]; then
   exit 1
 fi
 
-package_name="antfly-hermes-lite-$version-$target"
+package_name="hermes-antfly-$version-$target"
 artifact="$project_dir/dist/$package_name.tar.gz"
 checksum_file="$artifact.sha256"
 if [[ -e "$artifact" || -e "$checksum_file" ]]; then

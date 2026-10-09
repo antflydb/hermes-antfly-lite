@@ -4,7 +4,7 @@ set -euo pipefail
 project_dir=$(cd "$(dirname "$0")/.." && pwd)
 version=$(jq -er '.version' "$project_dir/plugin.json")
 target="$(go env GOOS)-$(go env GOARCH)"
-package_name="antfly-hermes-lite-$version-$target"
+package_name="hermes-antfly-$version-$target"
 artifact=${1:-"$project_dir/dist/$package_name.tar.gz"}
 
 verify_sha256() {

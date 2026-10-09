@@ -2,7 +2,7 @@
 set -euo pipefail
 
 project_dir=$(cd "$(dirname "$0")/.." && pwd)
-smoke_dir=$(mktemp -d "${TMPDIR:-/tmp}/antfly-hermes-lite.XXXXXX")
+smoke_dir=$(mktemp -d "${TMPDIR:-/tmp}/hermes-antfly.XXXXXX")
 trap 'rm -rf "$smoke_dir"' EXIT
 
 export DYLD_LIBRARY_PATH="$project_dir/bin${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
@@ -29,7 +29,7 @@ printf '%s\n' \
 
 jq -e -s '
   length == 5 and
-  .[0].result.serverInfo.name == "antfly-hermes-lite" and
+  .[0].result.serverInfo.name == "hermes-antfly" and
   ([.[1].result.tools[].name] | sort) == (["get_source", "knowledge_status", "search_knowledge"] | sort) and
   (.[2].result.content[0].text | contains("Managed authentication")) and
   (.[3].result.content[0].text | contains("support:authentication")) and

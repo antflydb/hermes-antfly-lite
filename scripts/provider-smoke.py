@@ -44,7 +44,7 @@ def load_provider(plugin_root: Path):
         raise RuntimeError("could not load provider")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module.AntflyLiteMemoryProvider
+    return module.AntflyMemoryProvider
 
 
 def main() -> None:

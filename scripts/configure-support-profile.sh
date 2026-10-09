@@ -17,14 +17,14 @@ if ! command -v "$hermes_bin" >/dev/null 2>&1 && [[ ! -x "$hermes_bin" ]]; then
   exit 1
 fi
 
-"$hermes_bin" -p "$hermes_profile" plugins show antfly-hermes-lite >/dev/null
+"$hermes_bin" -p "$hermes_profile" plugins show hermes-antfly >/dev/null
 plugin_data=$(antfly_resolve_plugin_data "$profile_root")
 skill_namespace=$(basename "$plugin_data")
 support_skill=${HERMES_SUPPORT_SKILL:-"$skill_namespace:antfly-support"}
 "$hermes_bin" -p "$hermes_profile" config set model.provider "$provider" >/dev/null
 "$hermes_bin" -p "$hermes_profile" config set model.default "$model" >/dev/null
 "$hermes_bin" -p "$hermes_profile" config set skills.auto_load "[\"$support_skill\"]" >/dev/null
-"$hermes_bin" -p "$hermes_profile" config set memory.provider antfly-hermes-lite >/dev/null
+"$hermes_bin" -p "$hermes_profile" config set memory.provider hermes-antfly >/dev/null
 "$hermes_bin" -p "$hermes_profile" config set platform_toolsets.cli \
   '["antfly-knowledge","memory","skills"]' >/dev/null
 "$hermes_bin" -p "$hermes_profile" config set agent.max_turns 8 >/dev/null

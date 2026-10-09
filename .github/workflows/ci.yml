@@ -47,7 +47,7 @@ jobs:
         run: scripts/ci-release.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: antfly-hermes-lite-${{ matrix.target }}
+          name: hermes-antfly-${{ matrix.target }}
           path: |
             dist/*.tar.gz
             dist/*.tar.gz.sha256

@@ -12,9 +12,9 @@ import (
 	"time"
 
 	"github.com/antflydb/antfly/go/pkg/antflylite"
-	"github.com/antflydb/hermes-antfly-lite/internal/buildinfo"
-	"github.com/antflydb/hermes-antfly-lite/internal/corpus"
-	"github.com/antflydb/hermes-antfly-lite/internal/policy"
+	"github.com/antflydb/hermes-antfly/internal/buildinfo"
+	"github.com/antflydb/hermes-antfly/internal/corpus"
+	"github.com/antflydb/hermes-antfly/internal/policy"
 )
 
 const schemaJSON = `{"version":1,"default_type":"knowledge","document_schemas":{"knowledge":{"schema":{"type":"object","required":["id","title","text","source_url","audience","visibility","state","updated_at"],"additionalProperties":true}}}}`

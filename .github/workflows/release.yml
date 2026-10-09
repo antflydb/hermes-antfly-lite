@@ -36,7 +36,7 @@ jobs:
         run: scripts/ci-release.sh
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: antfly-hermes-lite-${{ matrix.target }}
+          name: hermes-antfly-${{ matrix.target }}
           path: |
             dist/*.tar.gz
             dist/*.tar.gz.sha256
@@ -50,7 +50,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
-          pattern: antfly-hermes-lite-*
+          pattern: hermes-antfly-*
           path: release-assets
           merge-multiple: true
       - name: Verify checksums

@@ -1,10 +1,14 @@
-# Antfly Lite + Hermes roadmap
+# Hermes + Antfly roadmap
 
 ## Product objective
 
 Make Antfly the local-first system of record for Hermes agent context. A user
 can begin with embedded Antfly Lite and later move the same logical memory and
 knowledge model to an Antfly instance without rewriting the agent.
+
+The integration, repository, package, and Hermes provider are named
+`hermes-antfly`. `lite` and `cloud` are backend modes; Lite is the zero-service
+default, not part of the product identity.
 
 Memory and governed knowledge remain separate lifecycle domains even when they
 share Antfly's record identity, schema, retrieval, provenance, and backup
@@ -24,11 +28,12 @@ No current ELv2 runtime will be submitted as the final Hermes catalog build.
 
 ## Phase 2: Hermes catalog and adoption
 
-- Update the draft Hermes catalog PR to the Apache-2.0 connector commit.
+- Open a fresh Hermes catalog PR from the Apache-2.0 connector commit; the
+  pre-release draft was closed during the repository and provider rename.
 - Pass Hermes' anonymous-clone, exact-SHA, security, and plugin-validation
   gates.
 - Mark the PR ready and address maintainer review.
-- Verify a clean `hermes plugins install antfly-hermes-lite` installation.
+- Verify a clean `hermes plugins install hermes-antfly` installation.
 - Run the Support-agent pilot through the catalog-installed package.
 - Establish comparative recall, latency, reliability, storage, and setup
   baselines before proposing a default-provider change.
@@ -39,7 +44,7 @@ Add a backend abstraction to the same Hermes provider:
 
 ```yaml
 memory:
-  provider: antfly-hermes-lite
+  provider: hermes-antfly
   antfly:
     backend: cloud
     instance_url: https://customer.antfly.example

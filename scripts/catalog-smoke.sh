@@ -2,7 +2,7 @@
 set -euo pipefail
 
 project_dir=$(cd "$(dirname "$0")/.." && pwd)
-bundle="$project_dir/catalog/antfly-hermes-lite"
+bundle="$project_dir/catalog/hermes-antfly"
 version=$(jq -er '.version' "$bundle/plugin.json")
 source_version=$(jq -er '.version' "$project_dir/plugin.json")
 
@@ -23,7 +23,7 @@ from pathlib import Path
 bundle = Path(sys.argv[1])
 manifest = json.loads((bundle / "payloads" / "manifest.json").read_text(encoding="utf-8"))
 for target, metadata in manifest["payloads"].items():
-    archive = bundle / "payloads" / f"antfly-hermes-lite-{manifest['version']}-{target}.tar.gz"
+    archive = bundle / "payloads" / f"hermes-antfly-{manifest['version']}-{target}.tar.gz"
     actual = hashlib.sha256(archive.read_bytes()).hexdigest()
     if actual != metadata["sha256"]:
         raise SystemExit(f"checksum mismatch for {archive.name}")

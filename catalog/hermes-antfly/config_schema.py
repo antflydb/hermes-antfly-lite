@@ -1,4 +1,4 @@
-"""Dashboard configuration metadata for the Antfly Lite memory provider."""
+"""Dashboard configuration metadata for the Antfly memory provider."""
 
 from plugins.memory.config_schema import (
     KIND_BOOL,
@@ -13,8 +13,8 @@ from plugins.memory.config_schema import (
 
 
 CONFIG_SCHEMA = ProviderConfigSchema(
-    name="antfly-hermes-lite",
-    label="Antfly Lite",
+    name="hermes-antfly",
+    label="Antfly",
     storage=STORAGE_FLAT_JSON,
     fields=(
         ProviderField(
